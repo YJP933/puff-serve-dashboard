@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>PUFF SERVE Tennis Dashboard</title>
+
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page-plane:     #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-navy:        #204f8f;  /* 텍스트/숫자용 진한 네이비 (대비 7.9:1) */
+    --series-navy-bright: #2f5aa8;  /* 바/테두리/아이콘 등 넓은 면적용 비비드 블루 */
+    --series-navy-wash:   #eaf1fb;  /* 강조 배경 워시 */
+    --seq-100:        #d8e4f6;
+    --seq-250:        #9db8e3;
+    --seq-450:        #204f8f;
+    --status-good:    #0ca30c;
+    --status-warning: #fab219;
+    --status-critical:#d03b3b;
+    --success-text:   #006300;
+  }
+  /* 요청에 따라 라이트(블루/네이비앤화이트) 톤으로 고정합니다 — 시스템/앱의 다크 모드 설정과 무관하게
+     항상 흰색 배경 + 네이비 포인트 컬러로 표시됩니다. */
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", "Noto Sans CJK KR", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .viz-root {
+    background: var(--page-plane);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 32px 20px 64px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+
+  header.top {
+    margin-bottom: 28px;
+    padding-top: 10px;
+    border-top: 4px solid var(--series-navy-bright);
+  }
+  header.top .title-row {
+    display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+  h1 { font-size: 24px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 10px; }
+  h1::before {
+    content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px;
+    background: var(--series-navy-bright); flex: none;
+  }
+  .subtitle { color: var(--text-secondary); font-size: 14px; margin-top: 6px; line-height: 1.5; }
+  .updated { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--series-navy-bright);
+    border-radius: 12px;
+    padding: 20px 22px 20px 20px;
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    font-size: 15px; font-weight: 700; margin: 0 0 4px 0;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card h2::before {
+    content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px;
+    background: var(--series-navy-bright); flex: none;
+  }
+  .card .card-desc {
+    font-size: 13px; color: var(--text-secondary); margin: 0 0 16px 0; line-height: 1.5;
+  }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .stat-tile {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .stat-tile.highlight {
+    background: var(--series-navy-wash);
+    border: 1px solid var(--series-navy-bright);
+  }
+  .stat-tile .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+  .stat-tile .value { font-size: 26px; font-weight: 700; }
+  .stat-tile .value.small { font-size: 17px; font-weight: 700; }
+  .stat-tile.highlight .value { color: var(--series-navy); }
+
+  .filter-bar {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    font-size: 13.5px; color: var(--text-secondary); font-weight: 600;
+  }
+  .filter-bar select {
+    font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--series-navy);
+    border: 1px solid var(--series-navy-bright); border-radius: 8px; padding: 7px 12px;
+    background: #ffffff; cursor: pointer;
+  }
+  .filter-note {
+    font-size: 12.5px; color: var(--series-navy); background: var(--series-navy-wash);
+    border: 1px solid var(--series-navy-bright); border-radius: 8px;
+    padding: 8px 14px; margin-bottom: 16px;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th {
+    text-align: left; font-weight: 600; color: var(--text-muted);
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.03em;
+    padding: 0 10px 8px 10px; border-bottom: 1px solid var(--gridline);
+    white-space: nowrap;
+  }
+  tbody td { padding: 10px; border-bottom: 1px solid var(--gridline); vertical-align: middle; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.center { text-align: center; }
+
+  /* 표가 담기는 컨테이너는 화면 폭이 좁을 때 표 내용이 세로로 쪼개져 보이는 대신
+     가로 스크롤이 되도록 합니다 (이름·전적처럼 한 덩어리로 붙어 있어야 하는 텍스트가
+     글자 단위로 줄바꿈되는 것을 방지). id가 "Wrap"으로 끝나는 컨테이너에 공통 적용됩니다. */
+  [id$="Wrap"] { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .badge {
+    display: inline-block; padding: 2px 9px; border-radius: 999px;
+    font-size: 11px; font-weight: 700; background: var(--series-navy); color: #ffffff;
+  }
+  .rank-num { font-weight: 700; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .rank-1 { color: var(--series-navy); }
+  tr.top-rank { background: var(--series-navy-wash); }
+  tr.top-rank td { font-weight: 700; }
+
+  .meter-cell { display: flex; align-items: center; gap: 8px; min-width: 140px; }
+  .meter-track {
+    flex: 1; height: 8px; border-radius: 999px; background: var(--seq-100); overflow: hidden;
+  }
+  .meter-fill { height: 100%; background: var(--series-navy-bright); border-radius: 999px; }
+  .meter-pct { font-variant-numeric: tabular-nums; font-weight: 700; width: 42px; text-align: right; color: var(--series-navy); }
+
+  .empty-state {
+    text-align: center; padding: 28px 16px; color: var(--text-secondary); font-size: 13.5px; line-height: 1.6;
+  }
+  .empty-state .emoji { font-size: 24px; display: block; margin-bottom: 8px; }
+
+  .rec-list { display: flex; flex-direction: column; gap: 10px; }
+  .rec-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--page-plane);
+  }
+  .rec-item.best {
+    background: var(--series-navy-wash);
+    border: 1px solid var(--series-navy-bright);
+  }
+  .rec-item .pair { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+  .rec-item .best-tag {
+    display: inline-block; padding: 1px 7px; border-radius: 999px;
+    font-size: 10px; font-weight: 700; background: var(--series-navy); color: #fff;
+  }
+  .rec-item .basis { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .rec-item .score { font-weight: 700; color: var(--series-navy); font-variant-numeric: tabular-nums; font-size: 15px; }
+
+  .pos-tag {
+    display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; background: var(--seq-100); color: var(--series-navy);
+    vertical-align: middle;
+  }
+  .arrangement {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 4px 0;
+  }
+  .arrangement + .arrangement { border-top: 1px dashed var(--gridline); margin-top: 4px; padding-top: 8px; }
+  .arrangement.best .arrangement-label { color: var(--series-navy); font-weight: 700; }
+  .arrangement-label { font-size: 13px; }
+  .arrangement-stat { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .tabs {
+    display: flex; gap: 2px; border-bottom: 2px solid var(--gridline);
+    margin-bottom: 20px; overflow-x: auto;
+  }
+  .tab-btn {
+    appearance: none; background: none; border: none; cursor: pointer;
+    font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--text-secondary);
+    padding: 10px 16px; white-space: nowrap; border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+  }
+  .tab-btn:hover { color: var(--series-navy); }
+  .tab-btn.active { color: var(--series-navy); border-bottom-color: var(--series-navy-bright); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .toggle-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #ffffff; color: var(--series-navy); border: 1px solid var(--series-navy-bright);
+    border-radius: 8px; font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+    padding: 8px 14px; white-space: nowrap;
+  }
+  .toggle-btn:hover { background: var(--series-navy-wash); }
+
+  /* 파트너십 표: 화면에서는 상위 N개만 보이고, "더보기"를 누르면 숨겨둔 행이 드러남 */
+  #partnershipTable tr.row-extra { display: none; }
+  #partnershipTable.expanded tr.row-extra { display: table-row; }
+
+  .roster-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;
+  }
+  .roster-card {
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 13.5px;
+  }
+  .roster-card.selected { border-color: var(--series-navy-bright); background: var(--series-navy-wash); }
+  .roster-card .name { font-weight: 600; }
+  .roster-card .role { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+
+  footer.note {
+    font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 8px; line-height: 1.6;
+  }
+
+  .metric-info { margin: 4px 0 18px; font-size: 12px; }
+  .metric-info summary {
+    cursor: pointer; color: var(--series-navy); font-weight: 700; list-style: none;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .metric-info summary::-webkit-details-marker { display: none; }
+  .metric-info summary::before { content: "ⓘ"; }
+  .metric-info .metric-info-body {
+    margin-top: 8px; padding: 10px 12px; background: var(--page-plane); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text-secondary); line-height: 1.7;
+  }
+  .metric-info .metric-info-body b { color: var(--text-primary); }
+
+  @media (max-width: 640px) {
+    .stat-row { grid-template-columns: repeat(2, 1fr); }
+    table { font-size: 12.5px; }
+  }
+
+  .print-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--series-navy); color: #fff; border: none; border-radius: 8px;
+    font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+    padding: 8px 14px; white-space: nowrap;
+  }
+  .print-btn:hover { background: var(--series-navy-bright); }
+
+  /* 인쇄/PDF 저장 시: 탭을 무시하고 전체 섹션을 세로로 이어서 보여주고,
+     조합 네트워크는 그래프+표를 모두, 인터랙션용 버튼류는 숨깁니다 */
+  @media print {
+    .tabs, .print-btn, .print-hint, .toggle-btn { display: none !important; }
+    .tab-panel { display: block !important; break-inside: avoid; page-break-inside: avoid; }
+    .card { break-inside: avoid; page-break-inside: avoid; }
+    body, .viz-root, .page-plane { background: #ffffff !important; }
+    .metric-info summary { display: none; }
+    .metric-info .metric-info-body { display: block !important; }
+    #partnershipTable tr.row-extra { display: table-row !important; }
+    .filter-bar select { display: none; }
+    .filter-bar::after {
+      content: "선택: " attr(data-filter-label);
+      color: var(--series-navy);
+    }
+    /* 인쇄 페이지에는 가로 스크롤이 없으므로, 화면용 가로 스크롤(모바일 대응)
+       대신 이름/전적처럼 붙어야 할 단어는 유지하되 줄바꿈은 허용해 잘려나가지 않게 합니다. */
+    [id$="Wrap"] { overflow-x: visible !important; }
+    thead th, tbody td { white-space: normal !important; }
+  }
+
+  /* "전체 내용 저장" 버튼으로 내려받는 파일용 정적 스냅샷: 카카오톡 등 메신저의 파일 미리보기는
+     자바스크립트를 실행하지 않는 경우가 있어, 탭을 눌러야만 보이던 다른 탭의 내용이 영영 나타나지
+     않을 수 있습니다. 이를 막기 위해 저장 시점에 body에 이 클래스를 붙여, 탭 전환 없이도 모든
+     섹션이 이미 펼쳐진 상태로 저장되도록 합니다 (인쇄용 규칙과 동일한 원리, 미디어 조건만 없음).
+     인쇄 버튼은 그대로 남겨둡니다 — 이 파일을 실제 브라우저에서 열면 인쇄도 여전히 가능합니다. */
+  .static-export .tabs, .static-export .toggle-btn { display: none !important; }
+  .static-export .tab-panel { display: block !important; }
+  .static-export .metric-info summary { display: none; }
+  .static-export .metric-info .metric-info-body { display: block !important; }
+  .static-export #partnershipTable tr.row-extra { display: table-row !important; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <div class="wrap">
+
+    <header class="top">
+      <div class="title-row">
+        <h1>PUFF SERVE Tennis Dashboard</h1>
+        <span class="updated" id="updatedLabel"></span>
+      </div>
+      <div class="subtitle">
+        매주 경기 결과를 채팅으로 알려주시면 랭킹·조합 승률·추천 페어링이 반영되어 이 페이지가 다시 게시됩니다.
+      </div>
+      <div style="margin-top:14px;">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <button class="print-btn" onclick="printFullReport()">🖨️ 전체 내용 PDF로 저장 / 인쇄</button>
+          <span id="printStatus" class="print-hint" style="font-size:12.5px; color:var(--series-navy); font-weight:600;"></span>
+        </div>
+        <div class="print-hint" style="margin-top:6px; font-size:11.5px; color:var(--text-muted);">버튼을 누르면 파일로 저장됩니다 — 카카오톡 등으로 공유해서 볼 수 있고, 실제 브라우저 앱으로 열면 필터·인쇄까지 그대로 사용할 수 있습니다.</div>
+      </div>
+    </header>
+
+    <div class="stat-row" id="statRow"></div>
+
+    <div class="filter-bar" data-filter-label="전체보기">
+      <label for="playerFilter">보기</label>
+      <select id="playerFilter"></select>
+    </div>
+    <div class="filter-note" id="filterNote" style="display:none;"></div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" role="tab" aria-selected="true" data-tab="ranking">개인 랭킹</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="partnership">파트너십 랭킹</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="position">포지션 분석</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="recommend">추천 페어링</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="matches">최근 경기</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="roster">클럽 회원</button>
+    </div>
+
+    <div class="tab-panel active" data-panel="ranking">
+      <div class="card">
+        <h2>개인 랭킹</h2>
+        <p class="card-desc">복식·단식을 분리하여 각각 Elo 레이팅 기준 상위 5명을 보여줍니다. Elo는 체스·UTR(아마추어 테니스 레이팅)에서 쓰는 방식과 같은 원리로, 경기 수뿐 아니라 상대의 강약까지 반영합니다. 승률(보정)은 경기 수가 적을수록 평균(50%) 쪽으로 당겨 계산한 값이고, 게임 득실률은 승패가 아닌 실제 게임 스코어 격차를 반영한 참고 지표입니다. 게스트 참여자는 경기 기록에는 남지만 이 랭킹에는 집계되지 않습니다.</p>
+        <div id="personalRankingWrap"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="partnership">
+      <div class="card">
+        <h2>파트너십(조합) 랭킹</h2>
+        <p class="card-desc">함께 팀을 이룬 조합별 성적입니다. 승률이 높은 순으로 정렬되며, 화면에는 상위 8개만 기본 표시됩니다 ("숨긴 조합 보기"로 전체 확인 가능, PDF/인쇄에는 항상 전체가 포함됩니다). 함께 뛴 경기가 1경기뿐인 조합과 게스트가 포함된 조합은 집계에서 제외합니다.</p>
+        <div id="partnershipTableWrap"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="position">
+      <div class="card">
+        <h2>선수별 포지션 승률</h2>
+        <p class="card-desc">포핸드(듀스 코트) / 백핸드(애드 코트)로 뛰었을 때 각각의 승률입니다. (복식 경기만 집계, 단식·게스트 조합은 제외)</p>
+        <div id="positionPersonalWrap"></div>
+      </div>
+
+      <div class="card">
+        <h2>조합별 최적 포지션 배치</h2>
+        <p class="card-desc">같은 두 사람이라도 포지션을 바꿔 뛰었을 때 승률 차이가 있는지 비교해 추천 배치를 보여줍니다. 함께 뛴 경기가 1경기뿐인 조합은 집계에서 제외합니다.</p>
+        <div id="positionPairWrap"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="recommend">
+      <div class="card">
+        <h2>다음 경기 추천 페어링</h2>
+        <p class="card-desc">기존 조합 승률과 개인 실력을 함께 고려해 예상 경쟁력이 높은 조합을 추천합니다.</p>
+        <div id="recommendationWrap"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="matches">
+      <div class="card">
+        <h2>최근 경기 기록</h2>
+        <p class="card-desc">최근 4경기만 기본으로 표시됩니다. 기록이 쌓여도 화면과 PDF 길이가 무한정 늘어나지 않도록, 이전 기록은 "숨긴 기록 보기"를 눌러야 확인할 수 있습니다.</p>
+        <div id="recentMatchesWrap"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="roster">
+      <div class="card">
+        <h2>클럽 회원</h2>
+        <div class="roster-grid" id="rosterGrid"></div>
+      </div>
+    </div>
+
+    <footer class="note">
+      이 페이지는 개인 기록 관리용 라이브 대시보드입니다 · 데이터는 대화창을 통해 매주 갱신됩니다
+    </footer>
+
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   데이터: 여기에 매주 경기 결과를 추가하면 대시보드가 갱신됩니다.
+   ========================================================= */
+const SEASON_START = "2026-08-19";
+const LAST_UPDATED = "2026-09-20";
+
+const members = [
+  { name: "박유진", role: "회장" },
+  { name: "김영민", role: "총무" },
+  { name: "이민지", role: "부회장" },
+  { name: "문지원", role: "" },
+  { name: "김명희", role: "" },
+  { name: "송영주", role: "" },
+  { name: "정문경", role: "" },
+  { name: "정서윤", role: "" },
+  { name: "정영란", role: "" },
+  { name: "정은수", role: "" },
+  { name: "이진선", role: "" },
+  { name: "엄다예", role: "" },
+  { name: "김소현", role: "" },
+  { name: "오채원", role: "" },
+  { name: "김경미", role: "" },
+  { name: "강지혜", role: "" }
+];
+
+/* 경기 기록:
+   복식: { date: "YYYY-MM-DD",
+           team1: [{name, position}, {name, position}],
+           team2: [{name, position}, {name, position}],
+           score: "6:3", winner: "team1" | "team2" | "draw" }
+   단식: { date: "YYYY-MM-DD",
+           team1: [{name}], team2: [{name}],
+           score: "6:3", winner: "team1" | "team2" | "draw" }
+           (단식은 포지션 개념이 없어 position을 적지 않습니다)
+   position: "포핸드"(듀스 코트) | "백핸드"(애드 코트) — 복식에서만 사용
+   게스트(정회원이 아닌 참여자)는 members 배열에 없는 이름을 그대로 적으면 됩니다.
+   게스트는 경기 기록(최근 경기 목록)에는 표시되지만, 개인/조합/포지션 랭킹·추천 페어링
+   등 회원 전용 집계에서는 자동으로 제외됩니다. (별도 표시 플래그 불필요)
+   winner가 "draw"(무승부)인 경기는 최근 경기 기록에는 남지만,
+   개인/조합/포지션 승률 계산에서는 경기 수에도 포함되지 않습니다.
+   개인 랭킹은 복식 전적과 단식 전적을 분리하여 집계합니다.
+   이번 시즌은 아직 경기가 없어 빈 배열로 시작합니다. */
+const matches = [
+  { date: "2026-08-22", team1: [{name:"엄다예",position:"포핸드"},{name:"정은수",position:"백핸드"}], team2: [{name:"정서윤",position:"백핸드"},{name:"박유진",position:"포핸드"}], score: "5:5", winner: "draw" },
+  { date: "2026-08-22", team1: [{name:"김영민",position:"포핸드"},{name:"문지원",position:"백핸드"}], team2: [{name:"송영주",position:"백핸드"},{name:"정문경",position:"포핸드"}], score: "6:1", winner: "team1" },
+  { date: "2026-08-22", team1: [{name:"정영란",position:"포핸드"},{name:"정서윤",position:"백핸드"}], team2: [{name:"이민지",position:"포핸드"},{name:"엄다예",position:"백핸드"}], score: "6:3", winner: "team1" },
+  { date: "2026-08-22", team1: [{name:"송영주",position:"백핸드"},{name:"정문경",position:"포핸드"}], team2: [{name:"김영민",position:"백핸드"},{name:"정은수",position:"포핸드"}], score: "1:4", winner: "team2" },
+  { date: "2026-08-22", team1: [{name:"송영주",position:"백핸드"},{name:"정문경",position:"포핸드"}], team2: [{name:"김영민",position:"포핸드"},{name:"정은수",position:"백핸드"}], score: "2:2", winner: "draw" },
+  { date: "2026-08-22", team1: [{name:"박유진",position:"포핸드"},{name:"정영란",position:"백핸드"}], team2: [{name:"정은수",position:"백핸드"},{name:"김영민",position:"포핸드"}], score: "6:3", winner: "team1" },
+  { date: "2026-08-22", team1: [{name:"이민지",position:"백핸드"},{name:"엄다예",position:"포핸드"}], team2: [{name:"정문경",position:"백핸드"},{name:"문지원",position:"포핸드"}], score: "6:5", winner: "team1" },
+  { date: "2026-08-29", team1: [{name:"오채원",position:"포핸드"},{name:"박유진",position:"백핸드"}], team2: [{name:"김경미",position:"포핸드"},{name:"정영란",position:"백핸드"}], score: "4:2", winner: "team1" },
+  { date: "2026-08-29", team1: [{name:"김영민",position:"포핸드"},{name:"김명희",position:"백핸드"}], team2: [{name:"이진선",position:"백핸드"},{name:"강지혜",position:"포핸드"}], score: "4:0", winner: "team1" },
+  { date: "2026-08-29", team1: [{name:"강지혜",position:"백핸드"},{name:"정서윤",position:"포핸드"}], team2: [{name:"정은수",position:"포핸드"},{name:"엄다예",position:"백핸드"}], score: "1:4", winner: "team2" },
+  { date: "2026-08-29", team1: [{name:"김영민",position:"포핸드"},{name:"오채원",position:"백핸드"}], team2: [{name:"정영란",position:"포핸드"},{name:"정문경",position:"백핸드"}], score: "0:4", winner: "team2" },
+  { date: "2026-08-29", team1: [{name:"엄다예",position:"백핸드"},{name:"정은수",position:"포핸드"}], team2: [{name:"정서윤",position:"백핸드"},{name:"김경미",position:"포핸드"}], score: "4:0", winner: "team1" },
+  { date: "2026-08-29", team1: [{name:"강지혜",position:"백핸드"},{name:"박유진",position:"포핸드"}], team2: [{name:"이진선",position:"백핸드"},{name:"김명희",position:"포핸드"}], score: "4:2", winner: "team1" },
+  { date: "2026-08-29", team1: [{name:"정서윤",position:"포핸드"},{name:"정영란",position:"백핸드"}], team2: [{name:"김영민",position:"백핸드"},{name:"김경미",position:"포핸드"}], score: "4:1", winner: "team1" },
+  { date: "2026-08-29", team1: [{name:"정은수",position:"포핸드"},{name:"엄다예",position:"백핸드"}], team2: [{name:"오채원",position:"포핸드"},{name:"정문경",position:"백핸드"}], score: "4:3", winner: "team1" },
+  { date: "2026-08-29", team1: [{name:"김명희",position:"백핸드"},{name:"김영민",position:"포핸드"}], team2: [{name:"이진선",position:"포핸드"},{name:"정서윤",position:"백핸드"}], score: "4:3", winner: "team1" },
+  { date: "2026-08-29", team1: [{name:"박유진",position:"백핸드"},{name:"정문경",position:"포핸드"}], team2: [{name:"정영란",position:"포핸드"},{name:"김경미",position:"백핸드"}], score: "4:2", winner: "team1" },
+  { date: "2026-08-29", team1: [{name:"오채원",position:"포핸드"},{name:"이진선",position:"백핸드"}], team2: [{name:"정서윤",position:"백핸드"},{name:"김경미",position:"포핸드"}], score: "0:4", winner: "team2" },
+  { date: "2026-08-29", team1: [{name:"오채원",position:"백핸드"},{name:"이진선",position:"포핸드"}], team2: [{name:"정서윤",position:"포핸드"},{name:"김경미",position:"백핸드"}], score: "2:2", winner: "draw" },
+  { date: "2026-08-29", team1: [{name:"박유진",position:"포핸드"},{name:"김명희",position:"백핸드"}], team2: [{name:"정은수",position:"포핸드"},{name:"엄다예",position:"백핸드"}], score: "5:3", winner: "team1" },
+  { date: "2026-09-06", team1: [{name:"정은수",position:"포핸드"},{name:"김명희",position:"백핸드"}], team2: [{name:"오채원",position:"포핸드"},{name:"문지원",position:"백핸드"}], score: "6:1", winner: "team1" },
+  { date: "2026-09-06", team1: [{name:"김영민",position:"포핸드"},{name:"송영주",position:"백핸드"}], team2: [{name:"이진선",position:"포핸드"},{name:"김경미",position:"백핸드"}], score: "5:5", winner: "draw" },
+  { date: "2026-09-06", team1: [{name:"송영주",position:"포핸드"},{name:"김경미",position:"백핸드"}], team2: [{name:"문지원",position:"포핸드"},{name:"오채원",position:"백핸드"}], score: "6:3", winner: "team1" },
+  { date: "2026-09-06", team1: [{name:"김영민",position:"포핸드"},{name:"정은수",position:"백핸드"}], team2: [{name:"김명희",position:"포핸드"},{name:"이진선",position:"백핸드"}], score: "5:5", winner: "draw" },
+  { date: "2026-09-06", team1: [{name:"정은수",position:"포핸드"},{name:"오채원",position:"백핸드"}], team2: [{name:"문지원",position:"포핸드"},{name:"김명희",position:"백핸드"}], score: "6:4", winner: "team1" },
+  { date: "2026-09-06", team1: [{name:"김영민",position:"포핸드"},{name:"이진선",position:"백핸드"}], team2: [{name:"김경미",position:"포핸드"},{name:"송영주",position:"백핸드"}], score: "1:6", winner: "team2" },
+  { date: "2026-09-06", team1: [{name:"송영주",position:"포핸드"},{name:"오채원",position:"백핸드"}], team2: [{name:"문지원",position:"포핸드"},{name:"김경미",position:"백핸드"}], score: "4:0", winner: "team1" },
+  { date: "2026-09-06", team1: [{name:"김영민",position:"포핸드"},{name:"김명희",position:"백핸드"}], team2: [{name:"정은수",position:"포핸드"},{name:"이진선",position:"백핸드"}], score: "1:4", winner: "team2" },
+  { date: "2026-09-13", team1: [{name:"김명희",position:"포핸드"},{name:"문지원",position:"백핸드"}], team2: [{name:"엄다예",position:"포핸드"},{name:"정은수",position:"백핸드"}], score: "6:2", winner: "team1" },
+  { date: "2026-09-13", team1: [{name:"박유진",position:"포핸드"},{name:"오채원",position:"백핸드"}], team2: [{name:"송영주",position:"포핸드"},{name:"김경미",position:"백핸드"}], score: "5:6", winner: "team2" },
+  { date: "2026-09-13", team1: [{name:"박유진",position:"포핸드"},{name:"문지원",position:"백핸드"}], team2: [{name:"김경미",position:"포핸드"},{name:"엄다예",position:"백핸드"}], score: "6:5", winner: "team1" },
+  { date: "2026-09-13", team1: [{name:"송영주",position:"포핸드"},{name:"오채원",position:"백핸드"}], team2: [{name:"정은수",position:"포핸드"},{name:"김명희",position:"백핸드"}], score: "6:5", winner: "team1" },
+  { date: "2026-09-13", team1: [{name:"엄다예",position:"포핸드"},{name:"김명희",position:"백핸드"}], team2: [{name:"문지원",position:"포핸드"},{name:"김경미",position:"백핸드"}], score: "6:4", winner: "team1" },
+  { date: "2026-09-13", team1: [{name:"박유진",position:"포핸드"},{name:"오채원",position:"백핸드"}], team2: [{name:"정은수",position:"포핸드"},{name:"송영주",position:"백핸드"}], score: "3:6", winner: "team2" },
+  { date: "2026-09-13", team1: [{name:"문지원",position:"포핸드"},{name:"정은수",position:"백핸드"}], team2: [{name:"박유진",position:"포핸드"},{name:"송영주",position:"백핸드"}], score: "2:0", winner: "team1" },
+  { date: "2026-09-13", team1: [{name:"엄다예",position:"포핸드"},{name:"오채원",position:"백핸드"}], team2: [{name:"김경미",position:"포핸드"},{name:"김명희",position:"백핸드"}], score: "1:1", winner: "draw" },
+  { date: "2026-09-20", team1: [{name:"박유진",position:"포핸드"},{name:"강지혜",position:"백핸드"}], team2: [{name:"이진선",position:"포핸드"},{name:"김경미",position:"백핸드"}], score: "6:4", winner: "team1" },
+  { date: "2026-09-20", team1: [{name:"정은수",position:"포핸드"},{name:"오채원",position:"백핸드"}], team2: [{name:"김현직",position:"포핸드"},{name:"이민지",position:"백핸드"}], score: "4:6", winner: "team2" },
+  { date: "2026-09-20", team1: [{name:"김경미",position:"포핸드"},{name:"오채원",position:"백핸드"}], team2: [{name:"이민지",position:"포핸드"},{name:"이진선",position:"백핸드"}], score: "1:6", winner: "team2" },
+  { date: "2026-09-20", team1: [{name:"박유진"}], team2: [{name:"정은수"}], score: "0:6", winner: "team2" },
+  { date: "2026-09-20", team1: [{name:"이진선"}], team2: [{name:"정은수"}], score: "2:6", winner: "team2" },
+  { date: "2026-09-20", team1: [{name:"김경미",position:"포핸드"},{name:"강지혜",position:"백핸드"}], team2: [{name:"이민지",position:"포핸드"},{name:"박유진",position:"백핸드"}], score: "1:6", winner: "team2" },
+  { date: "2026-09-20", team1: [{name:"이민지"}], team2: [{name:"정은수"}], score: "0:4", winner: "team2" },
+  { date: "2026-09-20", team1: [{name:"오채원",position:"포핸드"},{name:"박유진",position:"백핸드"}], team2: [{name:"김경미",position:"포핸드"},{name:"이진선",position:"백핸드"}], score: "3:3", winner: "draw" }
+];
+
+/* =========================================================
+   화면 상태 (필터 / 펼침 / 보기 모드)
+   ========================================================= */
+let selectedPlayer = null;   // null = 전체보기, 아니면 특정 회원 이름
+let showAllMatches = false;  // 최근 경기 기록 전체 펼침 여부
+
+/* Claude 아티팩트로 공유된 페이지는 보안상 격리된 프레임(iframe) 안에서 열리는데,
+   이 환경에서는 브라우저 인쇄 대화상자(window.print())는 물론 팝업(window.open)과
+   alert() 같은 대화상자까지 보안 정책상 전부 막혀 있어 아무 반응도 일으킬 수 없습니다.
+   그래서 프레임 안에서 열려 있을 때는 Claude 아티팩트가 제공하는 "파일 저장" 기능
+   (downloads capability)을 통해 지금 화면 전체를 하나의 HTML 파일로 저장해드리고,
+   사용자가 그 파일을 직접 열면 그 화면(더 이상 격리된 프레임이 아님)에서 다시 이
+   버튼을 누르면 바로 인쇄 대화상자가 뜨도록 합니다. 안내 메시지도 alert() 대신
+   버튼 옆 텍스트로 표시합니다 (alert 자체가 막혀 있기 때문).
+   또한 저장되는 파일은 카카오톡 등 메신저의 파일 미리보기처럼 자바스크립트를 아예
+   실행하지 않는 뷰어로 열릴 수도 있습니다. 그런 경우 탭을 눌러도 다른 탭이 전환되지
+   않으므로, 저장하는 순간의 상태를 "필터 해제 + 모든 탭 펼침 + 파트너십 숨긴 조합 모두
+   표시"로 맞춘 뒤 스냅샷을 떠서 저장합니다 — 탭을 누르지 않아도 처음부터 각 탭의 내용이
+   다 보이는 하나의 긴 페이지가 됩니다. (단, 최근 경기 기록은 요청에 따라 예외적으로
+   기본 4경기만 저장되며, 전체를 보려면 실제 브라우저에서 열어 "숨긴 기록 보기"를
+   눌러야 합니다.) 저장 직후 화면은 원래 보던 상태로 즉시 되돌립니다. */
+async function printFullReport() {
+  const statusEl = document.getElementById("printStatus");
+  const setStatus = (msg) => { if (statusEl) statusEl.textContent = msg; };
+  const isEmbedded = window.self !== window.top;
+
+  if (!isEmbedded) {
+    window.print();
+    return;
+  }
+
+  if (typeof claude === "undefined" || !claude.use) {
+    setStatus("이 화면에서는 저장 기능을 사용할 수 없습니다.");
+    return;
+  }
+
+  setStatus("저장 준비 중...");
+
+  // 필터를 해제하고(전체 보기) 모든 탭이 이미 펼쳐진 스냅샷을 만든 뒤, 곧바로 원래 상태로 복구합니다.
+  // 최근 경기 기록은 (요청에 따라) 다른 탭과 달리 기본 4경기만 저장하고, 나머지는 실제
+  // 브라우저에서 열어 "숨긴 기록 보기"를 눌러야 볼 수 있도록 그대로 둡니다.
+  const prevSelectedPlayer = selectedPlayer;
+  selectedPlayer = null;
+  render();
+  document.body.classList.add("static-export");
+  let htmlContent;
+  try {
+    htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+  } finally {
+    document.body.classList.remove("static-export");
+    selectedPlayer = prevSelectedPlayer;
+    render();
+  }
+
+  try {
+    const downloads = await claude.use("downloads");
+    if (!downloads) {
+      setStatus("이 화면에서는 파일 저장 기능을 사용할 수 없습니다.");
+      return;
+    }
+    const result = await downloads.save({ filename: "PUFF_SERVE_대시보드.html", data: htmlContent });
+    if (result && result.status === "saved") {
+      setStatus("저장 완료! 파일을 열면 탭을 누르지 않아도 각 탭 내용이 펼쳐져 보입니다 (최근 경기는 4개만 표시). 실제 브라우저로 열면 인쇄·전체 기록 보기도 가능합니다.");
+    } else {
+      setStatus("저장이 완료되지 않았습니다. 다시 시도해주세요.");
+    }
+  } catch (e) {
+    const code = e && e.code;
+    if (code === "declined") { setStatus(""); return; }
+    if (code === "rate_limited") { setStatus("잠시 후 다시 시도해주세요."); return; }
+    setStatus("파일 저장에 실패했습니다. 잠시 후 다시 시도해주세요.");
+  }
+}
+
+/* =========================================================
+   계산 로직
+   ========================================================= */
+function teamNames(team) { return team.map(p => p.name); }
+function pairKey(a, b) { return [a, b].sort().join(" & "); }
+function isMemberName(name) { return members.some(m => m.name === name); }
+function isDoubles(match) { return match.team1.length === 2; }
+function matchTypeLabel(match) { return isDoubles(match) ? "복식" : "단식"; }
+
+function emptyRecord() { return { games: 0, wins: 0, losses: 0 }; }
+
+/* 승패만 있는 경기(무승부 제외)는 전체 참여자의 승 합계와 패 합계가 항상 같기 때문에
+   "클럽 평균 승률"은 수학적으로 항상 정확히 50%입니다. 이를 기준(prior)으로 삼아
+   경기 수가 적은 사람의 승률을 베이지안 방식으로 보정합니다 — 가상 경기 수(K)만큼
+   50%짜리 가상 경기를 더 치른 것처럼 계산해서, 경기 수가 적을수록 평균 쪽으로 더 많이
+   당겨지고 경기 수가 쌓일수록 원래 승률에 가까워지게 합니다. (IMDB 가중 평점과 같은 원리)
+   K=8은 "중간 강도" 설정입니다. */
+const ADJUST_K = 8;
+const CLUB_PRIOR = 0.5;
+function adjustedRate(wins, games, k = ADJUST_K) { return (wins + k * CLUB_PRIOR) / (games + k); }
+
+function withRate(rec) {
+  return { ...rec, winRate: rec.games > 0 ? rec.wins / rec.games : null, adjustedRate: adjustedRate(rec.wins, rec.games) };
+}
+
+/* 개인 전적은 복식/단식을 분리하여 집계합니다 (혼합하면 승률이 왜곡되기 때문). */
+/* Elo 레이팅: 체스·UTR(Universal Tennis Rating)류 아마추어 테니스 랭킹에서 쓰는 방식과 같은 원리로,
+   "경기 수"뿐 아니라 "누구를 이겼는지"(상대의 강약)까지 반영합니다. 복식은 두 파트너 레이팅의
+   평균을 팀 레이팅으로 보고, 경기 후 변화량을 두 사람에게 동일하게 적용하는 일반적인 방식을
+   사용합니다. 게스트(비회원)는 별도로 레이팅을 저장하지 않고, 그 경기에 한해 평균 레이팅(1500)을
+   가진 것으로 가정해 상대/파트너 계산에만 사용합니다. 무승부는 다른 통계와 동일하게 제외합니다. */
+const ELO_START = 1500;
+const ELO_K = 32;
+function computeEloRatings() {
+  const doublesElo = {}, singlesElo = {};
+  members.forEach(m => { doublesElo[m.name] = ELO_START; singlesElo[m.name] = ELO_START; });
+  const ratingOf = (map, name) => (name in map) ? map[name] : ELO_START;
+  const sorted = matches.slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  sorted.forEach(m => {
+    if (m.winner === "draw") return;
+    const map = isDoubles(m) ? doublesElo : singlesElo;
+    const names1 = teamNames(m.team1), names2 = teamNames(m.team2);
+    const r1 = names1.reduce((sum, n) => sum + ratingOf(map, n), 0) / names1.length;
+    const r2 = names2.reduce((sum, n) => sum + ratingOf(map, n), 0) / names2.length;
+    const expected1 = 1 / (1 + Math.pow(10, (r2 - r1) / 400));
+    const actual1 = m.winner === "team1" ? 1 : 0;
+    const delta = ELO_K * (actual1 - expected1);
+    names1.forEach(n => { if (n in map) map[n] += delta; });
+    names2.forEach(n => { if (n in map) map[n] -= delta; });
+  });
+  return { doublesElo, singlesElo };
+}
+
+/* 게임 득실률: 승패(1/0)만 보지 않고 실제 게임 스코어(예: "6:3")의 격차까지 반영하는 참고 지표입니다.
+   무승부 경기의 스코어도 득실 집계에는 포함합니다 (승/패 집계와는 별개의 지표이기 때문입니다). */
+function computeGameStats() {
+  const stats = {};
+  members.forEach(m => { stats[m.name] = { doubles: { won: 0, played: 0 }, singles: { won: 0, played: 0 } }; });
+  matches.forEach(m => {
+    const parts = m.score.split(":").map(s => parseInt(s.trim(), 10));
+    if (parts.length !== 2 || parts.some(isNaN)) return; // 형식이 다른 스코어는 건너뜀
+    const [g1, g2] = parts;
+    const bucket = isDoubles(m) ? "doubles" : "singles";
+    teamNames(m.team1).forEach(n => { if (stats[n]) { stats[n][bucket].won += g1; stats[n][bucket].played += g1 + g2; } });
+    teamNames(m.team2).forEach(n => { if (stats[n]) { stats[n][bucket].won += g2; stats[n][bucket].played += g1 + g2; } });
+  });
+  const out = {};
+  Object.entries(stats).forEach(([name, s]) => {
+    out[name] = {
+      doubles: { ...s.doubles, rate: s.doubles.played > 0 ? s.doubles.won / s.doubles.played : null },
+      singles: { ...s.singles, rate: s.singles.played > 0 ? s.singles.won / s.singles.played : null }
+    };
+  });
+  return out;
+}
+
+function computePersonalStats() {
+  const stats = {};
+  members.forEach(m => { stats[m.name] = { name: m.name, role: m.role, doublesRaw: emptyRecord(), singlesRaw: emptyRecord() }; });
+  matches.forEach(m => {
+    if (m.winner === "draw") return; // 무승부는 승률 계산에서 제외 (경기 수에도 포함하지 않음)
+    const winners = teamNames(m.winner === "team1" ? m.team1 : m.team2);
+    const losers = teamNames(m.winner === "team1" ? m.team2 : m.team1);
+    const bucket = isDoubles(m) ? "doublesRaw" : "singlesRaw";
+    [...teamNames(m.team1), ...teamNames(m.team2)].forEach(name => { if (stats[name]) stats[name][bucket].games++; });
+    winners.forEach(name => { if (stats[name]) stats[name][bucket].wins++; });
+    losers.forEach(name => { if (stats[name]) stats[name][bucket].losses++; });
+  });
+  const { doublesElo, singlesElo } = computeEloRatings();
+  const gameStats = computeGameStats();
+  return Object.values(stats).map(s => {
+    const doubles = { ...withRate(s.doublesRaw), elo: doublesElo[s.name], gameRate: gameStats[s.name].doubles.rate };
+    const singles = { ...withRate(s.singlesRaw), elo: singlesElo[s.name], gameRate: gameStats[s.name].singles.rate };
+    return {
+      name: s.name, role: s.role, doubles, singles,
+      // 하위 호환: 기존 코드가 참조하던 games/wins/losses/winRate/adjustedRate는 복식 기준입니다.
+      games: doubles.games, wins: doubles.wins, losses: doubles.losses,
+      winRate: doubles.winRate, adjustedRate: doubles.adjustedRate
+    };
+  });
+}
+
+/* 파트너십(조합) 성적: 복식 경기만 대상으로 하며, 둘 중 한쪽이라도 게스트(비회원)면 집계에서 제외합니다. */
+function computePartnershipStats() {
+  const stats = {};
+  matches.forEach(m => {
+    if (m.winner === "draw") return; // 무승부는 조합 성적 계산에서 제외
+    if (!isDoubles(m)) return; // 단식은 조합 개념이 없음
+    [m.team1, m.team2].forEach((team, idx) => {
+      const names = teamNames(team);
+      if (!names.every(isMemberName)) return; // 게스트가 포함된 조합은 집계 제외
+      const key = pairKey(names[0], names[1]);
+      if (!stats[key]) stats[key] = { key, players: [...names].sort(), games: 0, wins: 0, losses: 0 };
+      stats[key].games++;
+      const won = (idx === 0 && m.winner === "team1") || (idx === 1 && m.winner === "team2");
+      if (won) stats[key].wins++; else stats[key].losses++;
+    });
+  });
+  return Object.values(stats).map(s => ({ ...s, winRate: s.wins / s.games }));
+}
+
+/* 선수별 포핸드/백핸드 승률 (복식에만 해당하는 개념이라 단식 경기는 제외합니다) */
+function computePositionStats() {
+  const stats = {};
+  members.forEach(m => {
+    stats[m.name] = {
+      name: m.name, role: m.role,
+      forehand: { games: 0, wins: 0 },
+      backhand: { games: 0, wins: 0 }
+    };
+  });
+  matches.forEach(m => {
+    if (m.winner === "draw") return; // 무승부는 포지션 승률 계산에서 제외
+    if (!isDoubles(m)) return; // 단식은 포지션(포핸드/백핸드) 개념이 없음
+    [m.team1, m.team2].forEach((team, idx) => {
+      const won = (idx === 0 && m.winner === "team1") || (idx === 1 && m.winner === "team2");
+      team.forEach(p => {
+        const s = stats[p.name];
+        if (!s) return; // 게스트는 회원 전용 포지션 집계에서 제외
+        const slot = p.position === "백핸드" ? s.backhand : s.forehand;
+        slot.games++;
+        if (won) slot.wins++;
+      });
+    });
+  });
+  return Object.values(stats).map(s => ({
+    ...s,
+    forehandRate: s.forehand.games > 0 ? s.forehand.wins / s.forehand.games : null,
+    backhandRate: s.backhand.games > 0 ? s.backhand.wins / s.backhand.games : null
+  }));
+}
+
+/* 조합별 포지션 배치(누가 포핸드/백핸드였는지) 승률 비교 — 복식 + 두 사람 모두 회원인 경우만 */
+function computePairPositionStats() {
+  const stats = {};
+  matches.forEach(m => {
+    if (m.winner === "draw") return; // 무승부는 포지션 배치 승률 계산에서 제외
+    if (!isDoubles(m)) return; // 단식은 대상 아님
+    [m.team1, m.team2].forEach((team, idx) => {
+      if (!teamNames(team).every(isMemberName)) return; // 게스트가 포함된 조합은 제외
+      const [p1, p2] = team;
+      const forehandPlayer = p1.position === "백핸드" ? p2 : p1;
+      const backhandPlayer = p1.position === "백핸드" ? p1 : p2;
+      const key = pairKey(forehandPlayer.name, backhandPlayer.name) + "::" + forehandPlayer.name;
+      if (!stats[key]) {
+        stats[key] = {
+          key,
+          pairKey: pairKey(forehandPlayer.name, backhandPlayer.name),
+          forehandName: forehandPlayer.name,
+          backhandName: backhandPlayer.name,
+          games: 0, wins: 0
+        };
+      }
+      stats[key].games++;
+      const won = (idx === 0 && m.winner === "team1") || (idx === 1 && m.winner === "team2");
+      if (won) stats[key].wins++;
+    });
+  });
+  const arrangements = Object.values(stats).map(s => ({ ...s, winRate: s.wins / s.games }));
+  // pairKey 기준으로 두 가지 배치를 묶는다
+  const byPair = {};
+  arrangements.forEach(a => {
+    if (!byPair[a.pairKey]) byPair[a.pairKey] = [];
+    byPair[a.pairKey].push(a);
+  });
+  return Object.values(byPair).map(list => {
+    const sorted = list.slice().sort((a, b) => b.winRate - a.winRate || b.games - a.games);
+    return {
+      players: sorted[0].pairKey.split(" & "),
+      arrangements: sorted,
+      hasContrast: sorted.length > 1,
+      recommended: sorted[0]
+    };
+  });
+}
+
+function computeRecommendations(personalStats, partnershipStats, pairPositionStats) {
+  const personalMap = {};
+  personalStats.forEach(p => { personalMap[p.name] = p; });
+  const partnershipMap = {};
+  partnershipStats.forEach(p => { partnershipMap[p.key] = p; });
+  const pairPositionMap = {};
+  pairPositionStats.forEach(p => { pairPositionMap[[...p.players].sort().join(" & ")] = p; });
+
+  const names = members.map(m => m.name);
+  const candidates = [];
+  for (let i = 0; i < names.length; i++) {
+    for (let j = i + 1; j < names.length; j++) {
+      const a = names[i], b = names[j];
+      const key = pairKey(a, b);
+      const existing = partnershipMap[key];
+      const pa = personalMap[a], pb = personalMap[b];
+      let score, basis, games;
+      if (existing && existing.games >= 2) {
+        score = existing.winRate;
+        basis = `함께 뛴 ${existing.games}경기 기준 승률`;
+        games = existing.games;
+      } else {
+        // 개인 복식 보정 승률(경기 수가 적으면 50% 쪽으로 당겨진 값)의 평균으로 추정합니다.
+        score = (pa.adjustedRate + pb.adjustedRate) / 2;
+        basis = (pa.games === 0 && pb.games === 0)
+          ? "개인 기록 없음 (기본값)"
+          : "개인 승률 평균 추정";
+        games = existing ? existing.games : 0;
+      }
+      const posInfo = pairPositionMap[key];
+      if (posInfo && posInfo.hasContrast) {
+        const r = posInfo.recommended;
+        basis += ` · 추천 배치: ${r.forehandName}(포핸드) / ${r.backhandName}(백핸드)`;
+      }
+      candidates.push({ a, b, score, basis, games });
+    }
+  }
+  return candidates.sort((x, y) => y.score - x.score || y.games - x.games);
+}
+
+const PARTNERSHIP_MIN_GAMES = 2; // 1경기뿐인 조합은 우연성이 커서 목록에서 제외 (표만 간소화, 통계 자체는 그대로 유지)
+const PARTNERSHIP_LIMIT = 8;     // 기본으로는 상위 8개 조합만 보여주고 "더보기"로 전체 확인
+
+function renderPartnershipTable(partnershipStats) {
+  const wrap = document.getElementById("partnershipTableWrap");
+  const qualified = partnershipStats.filter(p => p.games >= PARTNERSHIP_MIN_GAMES);
+  const excludedCount = partnershipStats.length - qualified.length;
+  let list = qualified;
+  if (selectedPlayer) list = list.filter(p => p.players.includes(selectedPlayer));
+  if (list.length === 0) {
+    const excludedNote = (!selectedPlayer && excludedCount > 0)
+      ? `<div style="font-size:12px; color:var(--text-muted); margin-top:10px;">함께 뛴 경기가 1경기뿐인 조합 ${excludedCount}개는 표에서 제외했습니다.</div>` : "";
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <span class="emoji">🤝</span>
+        ${selectedPlayer
+          ? `${selectedPlayer}님이 아직 2경기 이상 함께 뛴 조합이 없습니다.`
+          : "아직 2경기 이상 함께 뛴 조합이 없습니다. 경기 결과가 쌓이면 조합별 성적이 표시됩니다."}
+      </div>${excludedNote}`;
+    return;
+  }
+  const sorted = list.slice().sort((a, b) => b.winRate - a.winRate || b.games - a.games);
+  // 화면에서는 상위 PARTNERSHIP_LIMIT개만 기본으로 보이지만, 나머지 행도 DOM에는 그대로 넣어두고
+  // CSS로만 숨깁니다 — 그래야 PDF로 저장/인쇄할 때는 "더보기"를 누르지 않았어도 항상 전체가 나옵니다.
+  const rows = sorted.map((p, i) => `
+    <tr class="${i >= PARTNERSHIP_LIMIT ? "row-extra" : ""}">
+      <td>${p.players.join(" & ")}</td>
+      <td class="num">${p.games}</td>
+      <td class="num">${p.wins}</td>
+      <td class="num">${p.losses}</td>
+      <td>
+        <div class="meter-cell">
+          <div class="meter-track"><div class="meter-fill" style="width:${Math.round(p.winRate * 100)}%"></div></div>
+          <span class="meter-pct">${fmtPct(p.winRate)}</span>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+  const hiddenCount = Math.max(0, sorted.length - PARTNERSHIP_LIMIT);
+  const toggleHtml = hiddenCount > 0
+    ? `<div style="text-align:center; margin-top:14px;">
+         <button class="toggle-btn" id="togglePartnershipRows">숨긴 조합 보기 (전체 ${sorted.length}개)</button>
+       </div>`
+    : "";
+  const excludedNote = (!selectedPlayer && excludedCount > 0)
+    ? `<div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:10px;">함께 뛴 경기가 1경기뿐인 조합 ${excludedCount}개는 표에서 제외했습니다.</div>` : "";
+  wrap.innerHTML = `
+    <table id="partnershipTable">
+      <thead><tr><th>조합</th><th class="num">경기</th><th class="num">승</th><th class="num">패</th><th>승률</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    ${toggleHtml}
+    ${excludedNote}`;
+  if (hiddenCount > 0) {
+    const btn = document.getElementById("togglePartnershipRows");
+    btn.addEventListener("click", () => {
+      const table = document.getElementById("partnershipTable");
+      const expanded = table.classList.toggle("expanded");
+      btn.textContent = expanded ? "간단히 보기" : `숨긴 조합 보기 (전체 ${sorted.length}개)`;
+    });
+  }
+}
+
+function renderRecommendations(recs, hasAnyData) {
+  const wrap = document.getElementById("recommendationWrap");
+  if (!hasAnyData) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <span class="emoji">✨</span>
+        아직 쌓인 기록이 없어 모든 조합의 예상 경쟁력이 동일합니다.<br>
+        이번 주는 자유롭게 조합해서 시작해 보세요 — 몇 주 뒤부터 추천 조합이 표시됩니다.
+      </div>`;
+    return;
+  }
+  let list = recs;
+  if (selectedPlayer) list = list.filter(r => r.a === selectedPlayer || r.b === selectedPlayer);
+  if (list.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <span class="emoji">✨</span>
+        ${selectedPlayer}님과 관련된 추천 조합이 없습니다.
+      </div>`;
+    return;
+  }
+  const top5 = list.slice(0, 5);
+  wrap.innerHTML = `<div class="rec-list">${top5.map((r, idx) => `
+    <div class="rec-item ${idx === 0 ? "best" : ""}">
+      <div>
+        <div class="pair">${r.a} & ${r.b}${idx === 0 ? ` <span class="best-tag">BEST</span>` : ""}</div>
+        <div class="basis">${r.basis}</div>
+      </div>
+      <div class="score">${fmtPct(r.score)}</div>
+    </div>
+  `).join("")}</div>`;
+}
+
+function fmtTeam(team) {
+  return team.map(p => {
+    const guestTag = !isMemberName(p.name) ? `<span class="pos-tag" style="background:var(--seq-250);color:#204f8f;">게스트</span>` : "";
+    const posTag = p.position ? `<span class="pos-tag">${p.position === "백핸드" ? "백" : "포"}</span>` : "";
+    return `${p.name}${posTag}${guestTag}`;
+  }).join(" & ");
+}
+
+function renderRecentMatches() {
+  const wrap = document.getElementById("recentMatchesWrap");
+  let list = matches.slice().reverse();
+  if (selectedPlayer) {
+    list = list.filter(m => teamNames(m.team1).includes(selectedPlayer) || teamNames(m.team2).includes(selectedPlayer));
+  }
+  if (list.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <span class="emoji">📋</span>
+        ${selectedPlayer
+          ? `${selectedPlayer}님이 참여한 경기 기록이 없습니다.`
+          : `등록된 경기가 없습니다. 복식은 "8/22 박유진(포핸드)+김명희(백핸드) vs 이민지(포핸드)+송영주(백핸드), 6:3 박유진 팀 승"처럼, 단식은 "박유진 vs 문지원 6:3"처럼 알려주세요. 게스트가 참여했다면 이름을 그대로 알려주시면 기록에는 남지만 랭킹 집계에서는 제외됩니다. 무승부는 "4:4 무승부"처럼 알려주시면 기록만 남고 승률 계산에는 포함되지 않습니다.`}
+      </div>`;
+    return;
+  }
+  const RECENT_LIMIT = 4;
+  const visible = showAllMatches ? list : list.slice(0, RECENT_LIMIT);
+  const hiddenCount = list.length - visible.length;
+  const rows = visible.map(m => {
+    const resultLabel = m.winner === "draw"
+      ? `<span style="color:var(--text-muted);">무승부</span>`
+      : `${teamNames(m.winner === "team1" ? m.team1 : m.team2).join(" & ")} 승`;
+    return `
+    <tr>
+      <td class="num">${m.date}</td>
+      <td class="center"><span class="badge" style="${isDoubles(m) ? "" : "background:var(--text-muted);"}">${matchTypeLabel(m)}</span></td>
+      <td>${fmtTeam(m.team1)}</td>
+      <td class="center">vs</td>
+      <td>${fmtTeam(m.team2)}</td>
+      <td class="num">${m.score}</td>
+      <td>${resultLabel}</td>
+    </tr>`;
+  }).join("");
+  const toggleHtml = (hiddenCount > 0 || showAllMatches)
+    ? `<div style="text-align:center; margin-top:14px;">
+         <button class="toggle-btn" id="toggleMatchesBtn">${showAllMatches ? "최근 4경기만 보기" : `숨긴 기록 보기 (전체 ${list.length}경기)`}</button>
+       </div>`
+    : "";
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th class="num">날짜</th><th class="center">구분</th><th>팀 1</th><th></th><th>팀 2</th><th class="num">스코어</th><th>결과</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    ${toggleHtml}`;
+  if (hiddenCount > 0 || showAllMatches) {
+    document.getElementById("toggleMatchesBtn").addEventListener("click", () => {
+      showAllMatches = !showAllMatches;
+      renderRecentMatches();
+    });
+  }
+}
+
+/* =========================================================
+   렌더링
+   ========================================================= */
+function fmtPct(rate) { return rate === null ? "-" : Math.round(rate * 100) + "%"; }
+
+function renderUpdated() {
+  document.getElementById("updatedLabel").textContent = "마지막 업데이트 " + LAST_UPDATED;
+}
+
+function renderFilterNote() {
+  const note = document.getElementById("filterNote");
+  const bar = document.querySelector(".filter-bar");
+  if (selectedPlayer) {
+    note.style.display = "block";
+    note.textContent = `현재 "${selectedPlayer}" 님과 관련된 정보만 표시 중입니다 (모든 탭에 공통 적용됩니다).`;
+  } else {
+    note.style.display = "none";
+  }
+  if (bar) bar.setAttribute("data-filter-label", selectedPlayer || "전체보기");
+}
+
+function renderStats(personalStats) {
+  const totalGames = matches.length;
+  const anySingles = personalStats.some(p => p.singles.games > 0);
+  if (selectedPlayer) {
+    const empty = { doubles: { games: 0, wins: 0, losses: 0, winRate: null, adjustedRate: 0.5, elo: ELO_START }, singles: { games: 0, wins: 0, losses: 0, winRate: null, adjustedRate: 0.5, elo: ELO_START } };
+    const p = personalStats.find(x => x.name === selectedPlayer) || empty;
+    const tiles = [
+      { label: "선택 회원", value: selectedPlayer },
+      { label: "복식 전적", value: p.doubles.games > 0 ? `${p.doubles.wins}승 ${p.doubles.losses}패` : "기록 없음" },
+      { label: "복식 Elo", value: p.doubles.games > 0 ? `${Math.round(p.doubles.elo)} (승률 ${fmtPct(p.doubles.winRate)} · 보정 ${fmtPct(p.doubles.adjustedRate)})` : "기록 없음", highlight: true },
+      { label: "단식 전적", value: p.singles.games > 0 ? `${p.singles.wins}승 ${p.singles.losses}패 · Elo ${Math.round(p.singles.elo)}` : "기록 없음" }
+    ];
+    document.getElementById("statRow").innerHTML = tiles.map(t => `
+      <div class="stat-tile ${t.highlight ? "highlight" : ""}">
+        <div class="label">${t.label}</div>
+        <div class="value">${t.value}</div>
+      </div>
+    `).join("");
+    return;
+  }
+  const played = personalStats.filter(p => p.doubles.games > 0);
+  const top = played.slice().sort((a, b) => b.doubles.elo - a.doubles.elo || b.doubles.games - a.doubles.games)[0];
+  const tiles = [
+    { label: "클럽 회원", value: members.length + "명" },
+    { label: "누적 경기 수", value: totalGames + "경기" },
+    { label: "시즌 시작", value: SEASON_START },
+    { label: "현재 1위 (복식·Elo)", value: top ? `${top.name} (${Math.round(top.doubles.elo)})` : "기록 없음", small: true, highlight: true }
+  ];
+  if (anySingles) {
+    const playedSingles = personalStats.filter(p => p.singles.games > 0);
+    const topSingles = playedSingles.slice().sort((a, b) => b.singles.elo - a.singles.elo || b.singles.games - a.singles.games)[0];
+    tiles.push({ label: "현재 1위 (단식·Elo)", value: topSingles ? `${topSingles.name} (${Math.round(topSingles.singles.elo)})` : "기록 없음", small: true, highlight: true, full: true });
+  }
+  document.getElementById("statRow").innerHTML = tiles.map(t => `
+    <div class="stat-tile ${t.highlight ? "highlight" : ""}" style="${t.full ? "grid-column:1/-1;" : ""}">
+      <div class="label">${t.label}</div>
+      <div class="value ${t.small ? "small" : ""}">${t.value}</div>
+    </div>
+  `).join("");
+}
+
+/* bucket: "doubles" | "singles" — 개인 통계를 해당 종목 기준으로만 뽑아 랭킹 테이블 HTML을 만든다.
+   정렬 기준은 Elo 레이팅(상대 강약 반영)이며, 보정 승률과 게임 득실률은 참고용으로 함께 보여준다. */
+function renderRankingTable(personalStats, bucket, emptyMessage, playerEmptyMessage) {
+  const RANKING_LIMIT = 5;
+  const rankedAll = personalStats
+    .map(p => ({ name: p.name, role: p.role, ...p[bucket] }))
+    .filter(p => p.games > 0)
+    .sort((a, b) => b.elo - a.elo || b.games - a.games);
+  if (rankedAll.length === 0) return `<div class="empty-state"><span class="emoji">🎾</span>${emptyMessage}</div>`;
+  // 화면에 보이는 Elo(반올림)가 같으면 같은 순위를 부여합니다 (표준 경쟁 순위: 1,2,2,4 …).
+  let rank = 0;
+  rankedAll.forEach((p, i) => {
+    const val = Math.round(p.elo);
+    if (i === 0 || val !== Math.round(rankedAll[i - 1].elo)) rank = i + 1;
+    p.rank = rank;
+  });
+  const eloValues = rankedAll.map(p => p.elo);
+  const eloMin = Math.min(...eloValues), eloMax = Math.max(...eloValues);
+  const eloRange = Math.max(eloMax - eloMin, 1);
+  let list = rankedAll;
+  if (selectedPlayer) {
+    list = rankedAll.filter(p => p.name === selectedPlayer);
+    if (list.length === 0) return `<div class="empty-state"><span class="emoji">🎾</span>${playerEmptyMessage}</div>`;
+  }
+  const shown = selectedPlayer ? list : list.slice(0, RANKING_LIMIT);
+  const hiddenCount = selectedPlayer ? 0 : rankedAll.length - shown.length;
+  const rows = shown.map(p => {
+    const isTop = p.rank === 1;
+    const eloBarPct = Math.max(6, Math.round(((p.elo - eloMin) / eloRange) * 100));
+    return `
+    <tr class="${isTop ? "top-rank" : ""}">
+      <td class="center"><span class="rank-num ${isTop ? "rank-1" : ""}">${isTop ? "🏆" : p.rank}</span></td>
+      <td>${p.name}${p.role ? ` <span class="badge">${p.role}</span>` : ""}</td>
+      <td class="num">${p.games}</td>
+      <td class="num">${p.wins}승 ${p.losses}패</td>
+      <td>
+        <div class="meter-cell">
+          <div class="meter-track"><div class="meter-fill" style="width:${eloBarPct}%"></div></div>
+          <span class="meter-pct">${Math.round(p.elo)}</span>
+        </div>
+      </td>
+      <td class="num" style="color:var(--text-muted);">${fmtPct(p.winRate)} <span style="color:var(--text-muted);">(보정 ${fmtPct(p.adjustedRate)})</span></td>
+      <td class="num" style="color:var(--text-muted);">${fmtPct(p.gameRate)}</td>
+    </tr>`;
+  }).join("");
+  const footnote = hiddenCount > 0
+    ? `<div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:10px;">상위 ${RANKING_LIMIT}명만 표시됩니다 (전체 ${rankedAll.length}명 중)</div>`
+    : "";
+  return `
+    <table>
+      <thead>
+        <tr>
+          <th class="center">순위</th><th>이름</th><th class="num">경기</th><th class="num">전적</th><th>Elo</th><th class="num">승률(보정)</th><th class="num">게임 득실률</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    ${footnote}`;
+}
+
+function renderPersonalRanking(personalStats) {
+  const wrap = document.getElementById("personalRankingWrap");
+  const anyDoubles = personalStats.some(p => p.doubles.games > 0);
+  const anySingles = personalStats.some(p => p.singles.games > 0);
+  if (!anyDoubles && !anySingles) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <span class="emoji">🎾</span>
+        아직 기록된 경기가 없습니다. 이번 주 경기 결과를 알려주시면 순위가 계산됩니다.
+      </div>`;
+    return;
+  }
+  const doublesHtml = renderRankingTable(
+    personalStats, "doubles",
+    "아직 기록된 복식 경기가 없습니다.",
+    `${selectedPlayer}님은 아직 기록된 복식 경기가 없습니다.`
+  );
+  let singlesSection = "";
+  if (anySingles) {
+    const singlesHtml = renderRankingTable(
+      personalStats, "singles",
+      "아직 기록된 단식 경기가 없습니다.",
+      `${selectedPlayer}님은 아직 기록된 단식 경기가 없습니다.`
+    );
+    singlesSection = `
+      <div style="margin-top:22px; padding-top:18px; border-top:1px dashed var(--gridline);">
+        <div style="font-weight:700; font-size:13.5px; margin-bottom:10px;">단식 개인 랭킹</div>
+        ${singlesHtml}
+      </div>`;
+  }
+  const metricInfo = `
+    <details class="metric-info">
+      <summary>Elo·승률(보정)·게임 득실률이 뭔가요?</summary>
+      <div class="metric-info-body">
+        <b>Elo</b> — 체스·UTR(아마추어 테니스 레이팅)에서 쓰는 방식과 같은 원리로 순위를 매깁니다. 모두 ${ELO_START}점에서 시작해서, <b>강한 상대를 이기면 점수가 많이 오르고 약한 상대에게 지면 조금만 내려갑니다</b>. 경기 수와 상대 수준을 함께 반영하기 때문에 단순 승률보다 정확한 실력 순위를 보여줍니다.<br>
+        <b>승률(보정)</b> — 경기 수가 적을수록 평균인 50% 쪽으로 살짝 당겨 계산한 값이에요. 예를 들어 1경기 1승(원 승률 100%)은 우연일 수 있으니 보정 승률은 더 낮게 나옵니다. 괄호 밖의 원 승률과 비교해 보세요.<br>
+        <b>게임 득실률</b> — 이기고 진 경기 수가 아니라, 실제 게임 스코어(예: 6:3)의 격차를 반영한 지표입니다.
+      </div>
+    </details>`;
+  wrap.innerHTML = `
+    ${metricInfo}
+    <div style="font-weight:700; font-size:13.5px; margin-bottom:10px;">복식 개인 랭킹</div>
+    ${doublesHtml}
+    ${singlesSection}`;
+}
+
+function renderPositionPersonal(positionStats) {
+  const wrap = document.getElementById("positionPersonalWrap");
+  const anyGames = positionStats.some(p => p.forehand.games > 0 || p.backhand.games > 0);
+  if (!anyGames) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <span class="emoji">🎾</span>
+        아직 포지션이 기록된 경기가 없습니다. 경기 결과를 알려주실 때 포핸드/백핸드도 함께 알려주세요.
+      </div>`;
+    return;
+  }
+  let sorted = positionStats
+    .filter(p => p.forehand.games > 0 || p.backhand.games > 0)
+    .sort((a, b) => {
+      const ra = Math.max(a.forehandRate ?? -1, a.backhandRate ?? -1);
+      const rb = Math.max(b.forehandRate ?? -1, b.backhandRate ?? -1);
+      return rb - ra;
+    });
+  if (selectedPlayer) {
+    sorted = sorted.filter(p => p.name === selectedPlayer);
+    if (sorted.length === 0) {
+      wrap.innerHTML = `
+        <div class="empty-state">
+          <span class="emoji">🎾</span>
+          ${selectedPlayer}님은 아직 포지션이 기록된 경기가 없습니다.
+        </div>`;
+      return;
+    }
+  }
+  const rows = sorted.map(p => {
+    let preferred = "-";
+    if (p.forehandRate !== null && p.backhandRate !== null) {
+      if (p.forehandRate > p.backhandRate) preferred = "포핸드";
+      else if (p.backhandRate > p.forehandRate) preferred = "백핸드";
+      else preferred = "동일";
+    } else if (p.forehandRate !== null) preferred = "포핸드 (기록 부족)";
+    else if (p.backhandRate !== null) preferred = "백핸드 (기록 부족)";
+    return `
+    <tr>
+      <td>${p.name}${p.role ? ` <span class="badge">${p.role}</span>` : ""}</td>
+      <td class="num">${p.forehand.games}</td>
+      <td class="num">${fmtPct(p.forehandRate)}</td>
+      <td class="num">${p.backhand.games}</td>
+      <td class="num">${fmtPct(p.backhandRate)}</td>
+      <td class="center">${preferred !== "-" ? `<span class="badge">${preferred}</span>` : "-"}</td>
+    </tr>`;
+  }).join("");
+  wrap.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>이름</th><th class="num">포핸드 경기</th><th class="num">포핸드 승률</th>
+          <th class="num">백핸드 경기</th><th class="num">백핸드 승률</th><th class="center">선호 포지션</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+/* 조합별 최적 포지션 배치도 파트너십 랭킹과 동일하게, 두 사람이 (포지션에 상관없이)
+   합쳐서 2경기 미만 함께 뛴 경우는 우연성이 커서 표에서 제외합니다. */
+function renderPositionPair(pairPositionStats) {
+  const wrap = document.getElementById("positionPairWrap");
+  const totalGames = p => p.arrangements.reduce((sum, a) => sum + a.games, 0);
+  const qualified = pairPositionStats.filter(p => totalGames(p) >= PARTNERSHIP_MIN_GAMES);
+  const excludedCount = pairPositionStats.length - qualified.length;
+  let list = qualified;
+  if (selectedPlayer) list = list.filter(p => p.players.includes(selectedPlayer));
+  const excludedNote = (!selectedPlayer && excludedCount > 0)
+    ? `<div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:10px;">함께 뛴 경기가 1경기뿐인 조합 ${excludedCount}개는 표에서 제외했습니다.</div>` : "";
+  if (list.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <span class="emoji">🔄</span>
+        ${selectedPlayer
+          ? `${selectedPlayer}님이 아직 2경기 이상 함께 뛴 포지션별 조합 기록이 없습니다.`
+          : "아직 2경기 이상 함께 뛴 조합이 없습니다. 같은 두 사람이 포지션을 바꿔서도 몇 번 뛰어보면 최적 배치를 비교해드립니다."}
+      </div>${excludedNote}`;
+    return;
+  }
+  const sorted = list.slice().sort((a, b) => b.recommended.winRate - a.recommended.winRate);
+  const rows = sorted.map(p => {
+    const cells = p.arrangements.map((a, idx) => `
+      <div class="arrangement ${idx === 0 && p.hasContrast ? "best" : ""}">
+        <div class="arrangement-label">${a.forehandName}<span class="pos-tag">포</span> · ${a.backhandName}<span class="pos-tag">백</span></div>
+        <div class="arrangement-stat">${a.games}경기 · ${fmtPct(a.winRate)}</div>
+      </div>`).join("");
+    return `
+    <tr>
+      <td>${p.players.join(" & ")}</td>
+      <td>${cells}</td>
+      <td class="center">${p.hasContrast
+        ? `<span class="badge">${p.recommended.forehandName} 포 / ${p.recommended.backhandName} 백</span>`
+        : `<span class="badge" style="background:var(--text-muted)">배치 비교 부족</span>`}</td>
+    </tr>`;
+  }).join("");
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>조합</th><th>배치별 성적</th><th class="center">추천 배치</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    ${excludedNote}`;
+}
+
+function renderRoster() {
+  document.getElementById("rosterGrid").innerHTML = members.map(m => `
+    <div class="roster-card ${m.name === selectedPlayer ? "selected" : ""}">
+      <div class="name">${m.name}</div>
+      <div class="role">${m.role || "회원"}</div>
+    </div>
+  `).join("");
+}
+
+function render() {
+  const personalStats = computePersonalStats();
+  const partnershipStats = computePartnershipStats();
+  const positionStats = computePositionStats();
+  const pairPositionStats = computePairPositionStats();
+  const recs = computeRecommendations(personalStats, partnershipStats, pairPositionStats);
+  const hasAnyData = matches.length > 0;
+
+  renderUpdated();
+  renderFilterNote();
+  renderStats(personalStats);
+  renderPersonalRanking(personalStats);
+  renderPartnershipTable(partnershipStats);
+  renderPositionPersonal(positionStats);
+  renderPositionPair(pairPositionStats);
+  renderRecommendations(recs, hasAnyData);
+  renderRecentMatches();
+  renderRoster();
+}
+
+function initTabs() {
+  const buttons = document.querySelectorAll(".tab-btn");
+  const panels = document.querySelectorAll(".tab-panel");
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      buttons.forEach(b => { b.classList.remove("active"); b.setAttribute("aria-selected", "false"); });
+      panels.forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      btn.setAttribute("aria-selected", "true");
+      document.querySelector(`.tab-panel[data-panel="${btn.dataset.tab}"]`).classList.add("active");
+    });
+  });
+}
+
+function initFilter() {
+  const sel = document.getElementById("playerFilter");
+  sel.innerHTML = `<option value="">전체보기</option>` + members.map(m => `<option value="${m.name}">${m.name}</option>`).join("");
+  sel.addEventListener("change", () => {
+    selectedPlayer = sel.value || null;
+    render();
+  });
+}
+
+initFilter();
+initTabs();
+render();
+</script>
+</body>
+</html>
