@@ -387,7 +387,7 @@
    데이터: 여기에 매주 경기 결과를 추가하면 대시보드가 갱신됩니다.
    ========================================================= */
 const SEASON_START = "2026-08-19";
-const LAST_UPDATED = "2026-10-04";
+const LAST_UPDATED = "2026-10-11";
 
 const members = [
   { name: "박유진", role: "회장" },
@@ -421,6 +421,8 @@ const members = [
    게스트(정회원이 아닌 참여자)는 members 배열에 없는 이름을 그대로 적으면 됩니다.
    게스트는 경기 기록(최근 경기 목록)에는 표시되지만, 개인/조합/포지션 랭킹·추천 페어링
    등 회원 전용 집계에서는 자동으로 제외됩니다. (별도 표시 플래그 불필요)
+   score와 position은 생략할 수 있습니다(승패만 기억나는 경기). 이 경우 Elo·승률·조합 전적에는
+   반영되지만 게임 득실률과 포지션 분석에서는 자동으로 제외되고, 최근 경기에는 "기록 없음"으로 표시됩니다.
    winner가 "draw"(무승부)인 경기는 최근 경기 기록에는 남지만,
    개인/조합/포지션 승률 계산에서는 경기 수에도 포함되지 않습니다.
    개인 랭킹은 복식 전적과 단식 전적을 분리하여 집계합니다.
@@ -485,7 +487,35 @@ const matches = [
   { date: "2026-10-04", team1: [{name:"김영민",position:"포핸드"},{name:"김소현",position:"백핸드"}], team2: [{name:"정영란",position:"포핸드"},{name:"문지원",position:"백핸드"}], score: "6:4", winner: "team1" },
   { date: "2026-10-04", team1: [{name:"김경임",position:"포핸드"},{name:"엄다예",position:"백핸드"}], team2: [{name:"이민지",position:"포핸드"},{name:"송영주",position:"백핸드"}], score: "6:1", winner: "team1" },
   { date: "2026-10-04", team1: [{name:"엄다예",position:"포핸드"},{name:"김영민",position:"백핸드"}], team2: [{name:"이민지",position:"포핸드"},{name:"정영란",position:"백핸드"}], score: "1:3", winner: "team2" },
-  { date: "2026-10-04", team1: [{name:"송영주",position:"포핸드"},{name:"김소현",position:"백핸드"}], team2: [{name:"문지원",position:"포핸드"},{name:"김경임",position:"백핸드"}], score: "4:2", winner: "team1" }
+  { date: "2026-10-04", team1: [{name:"송영주",position:"포핸드"},{name:"김소현",position:"백핸드"}], team2: [{name:"문지원",position:"포핸드"},{name:"김경임",position:"백핸드"}], score: "4:2", winner: "team1" },
+  { date: "2026-10-09", team1: [{name:"박유진"},{name:"김영민"}], team2: [{name:"이민지"},{name:"송영주"}], winner: "team1" },
+  { date: "2026-10-09", team1: [{name:"정영란"},{name:"이진선"}], team2: [{name:"김명희"},{name:"김소현"}], winner: "team2" },
+  { date: "2026-10-09", team1: [{name:"박유진"},{name:"정영란"}], team2: [{name:"김영민"},{name:"이진선"}], winner: "team2" },
+  { date: "2026-10-09", team1: [{name:"이민지"},{name:"김명희"}], team2: [{name:"송영주"},{name:"김소현"}], winner: "team2" },
+  { date: "2026-10-09", team1: [{name:"박유진"},{name:"김명희"}], team2: [{name:"김영민"},{name:"김소현"}], winner: "team2" },
+  { date: "2026-10-09", team1: [{name:"이민지"},{name:"정영란"}], team2: [{name:"송영주"},{name:"이진선"}], winner: "team2" },
+  { date: "2026-10-09", team1: [{name:"박유진"},{name:"이민지"}], team2: [{name:"정영란"},{name:"김명희"}], winner: "team2" },
+  { date: "2026-10-09", team1: [{name:"김영민"},{name:"송영주"}], team2: [{name:"이진선"},{name:"김소현"}], winner: "team2" },
+  { date: "2026-10-09", team1: [{name:"박유진"},{name:"이진선"}], team2: [{name:"이민지"},{name:"김소현"}], winner: "team2" },
+  { date: "2026-10-09", team1: [{name:"김영민"},{name:"정영란"}], team2: [{name:"송영주"},{name:"김명희"}], winner: "team2" },
+  { date: "2026-10-09", team1: [{name:"박유진"},{name:"김소현"}], team2: [{name:"송영주"},{name:"정영란"}], winner: "team1" },
+  { date: "2026-10-09", team1: [{name:"김영민"},{name:"김명희"}], team2: [{name:"이민지"},{name:"이진선"}], winner: "team1" },
+  { date: "2026-10-09", team1: [{name:"박유진"},{name:"송영주"}], team2: [{name:"이진선"},{name:"김명희"}], winner: "team2" },
+  { date: "2026-10-09", team1: [{name:"김영민"},{name:"이민지"}], team2: [{name:"정영란"},{name:"김소현"}], winner: "team1" },
+  { date: "2026-10-09", team1: [{name:"김소현"},{name:"김명희"}], team2: [{name:"김영민"},{name:"이진선"}], winner: "team1" },
+  { date: "2026-10-09", team1: [{name:"송영주"},{name:"박유진"}], team2: [{name:"이민지"},{name:"정영란"}], winner: "team1" },
+  { date: "2026-10-09", team1: [{name:"김소현"},{name:"송영주"}], team2: [{name:"김영민"},{name:"이민지"}], winner: "team1" },
+  { date: "2026-10-09", team1: [{name:"김명희"},{name:"박유진"}], team2: [{name:"이진선"},{name:"정영란"}], winner: "team1" },
+  { date: "2026-10-09", team1: [{name:"김소현"},{name:"박유진"}], team2: [{name:"김영민"},{name:"정영란"}], winner: "team1" },
+  { date: "2026-10-09", team1: [{name:"김명희"},{name:"송영주"}], team2: [{name:"이진선"},{name:"이민지"}], winner: "team1" },
+  { date: "2026-10-11", team1: [{name:"정은수",position:"포핸드"},{name:"강지혜",position:"백핸드"}], team2: [{name:"엄다예",position:"포핸드"},{name:"김명희",position:"백핸드"}], score: "6:0", winner: "team1" },
+  { date: "2026-10-11", team1: [{name:"이진선",position:"포핸드"},{name:"정영란",position:"백핸드"}], team2: [{name:"김경미",position:"포핸드"},{name:"이민지",position:"백핸드"}], score: "6:5", winner: "team1" },
+  { date: "2026-10-11", team1: [{name:"정은수",position:"포핸드"},{name:"이민지",position:"백핸드"}], team2: [{name:"강지혜",position:"포핸드"},{name:"김경미",position:"백핸드"}], score: "6:0", winner: "team1" },
+  { date: "2026-10-11", team1: [{name:"정영란",position:"포핸드"},{name:"엄다예",position:"백핸드"}], team2: [{name:"김명희",position:"포핸드"},{name:"이진선",position:"백핸드"}], score: "1:6", winner: "team2" },
+  { date: "2026-10-11", team1: [{name:"김경미",position:"포핸드"},{name:"엄다예",position:"백핸드"}], team2: [{name:"정영란",position:"포핸드"},{name:"강지혜",position:"백핸드"}], score: "1:6", winner: "team2" },
+  { date: "2026-10-11", team1: [{name:"이진선",position:"포핸드"},{name:"이민지",position:"백핸드"}], team2: [{name:"김명희",position:"포핸드"},{name:"정은수",position:"백핸드"}], score: "3:6", winner: "team2" },
+  { date: "2026-10-11", team1: [{name:"정영란",position:"포핸드"},{name:"이민지",position:"백핸드"}], team2: [{name:"이진선",position:"포핸드"},{name:"김명희",position:"백핸드"}], score: "5:3", winner: "team1" },
+  { date: "2026-10-11", team1: [{name:"정은수",position:"포핸드"},{name:"김경미",position:"백핸드"}], team2: [{name:"엄다예",position:"포핸드"},{name:"강지혜",position:"백핸드"}], score: "5:3", winner: "team1" }
 ];
 
 /* =========================================================
@@ -621,6 +651,7 @@ function computeGameStats() {
   const stats = {};
   members.forEach(m => { stats[m.name] = { doubles: { won: 0, played: 0 }, singles: { won: 0, played: 0 } }; });
   matches.forEach(m => {
+    if (!m.score) return; // 승패만 기록된 경기는 게임 득실 집계에서 제외
     const parts = m.score.split(":").map(s => parseInt(s.trim(), 10));
     if (parts.length !== 2 || parts.some(isNaN)) return; // 형식이 다른 스코어는 건너뜀
     const [g1, g2] = parts;
@@ -696,6 +727,7 @@ function computePositionStats() {
   matches.forEach(m => {
     if (m.winner === "draw") return; // 무승부는 포지션 승률 계산에서 제외
     if (!isDoubles(m)) return; // 단식은 포지션(포핸드/백핸드) 개념이 없음
+    if ([...m.team1, ...m.team2].some(p => !p.position)) return; // 포지션 미기록 경기는 포지션 집계에서 제외
     [m.team1, m.team2].forEach((team, idx) => {
       const won = (idx === 0 && m.winner === "team1") || (idx === 1 && m.winner === "team2");
       team.forEach(p => {
@@ -720,6 +752,7 @@ function computePairPositionStats() {
   matches.forEach(m => {
     if (m.winner === "draw") return; // 무승부는 포지션 배치 승률 계산에서 제외
     if (!isDoubles(m)) return; // 단식은 대상 아님
+    if ([...m.team1, ...m.team2].some(p => !p.position)) return; // 포지션 미기록 경기는 제외
     [m.team1, m.team2].forEach((team, idx) => {
       if (!teamNames(team).every(isMemberName)) return; // 게스트가 포함된 조합은 제외
       const [p1, p2] = team;
@@ -932,7 +965,7 @@ function renderRecentMatches() {
       <td>${fmtTeam(m.team1)}</td>
       <td class="center">vs</td>
       <td>${fmtTeam(m.team2)}</td>
-      <td class="num">${m.score}</td>
+      <td class="num">${m.score || `<span style="color:var(--text-muted);">기록 없음</span>`}</td>
       <td>${resultLabel}</td>
     </tr>`;
   }).join("");
