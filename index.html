@@ -1,10 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PUFF SERVE Tennis Dashboard</title>
-<style>
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PUFF SERVE Tennis Dashboard</title><style>
   .viz-root {
     color-scheme: light;
     --surface-1:      #fcfcfb;
@@ -282,9 +276,7 @@
   .static-export .metric-info summary { display: none; }
   .static-export .metric-info .metric-info-body { display: block !important; }
   .static-export #partnershipTable tr.row-extra { display: table-row !important; }
-</style>
-</head>
-<body>
+</style></head><body>
 <div class="viz-root">
   <div class="wrap">
 
@@ -387,7 +379,7 @@
    데이터: 여기에 매주 경기 결과를 추가하면 대시보드가 갱신됩니다.
    ========================================================= */
 const SEASON_START = "2026-08-19";
-const LAST_UPDATED = "2026-11-15";
+const LAST_UPDATED = "2026-11-22";
 
 const members = [
   { name: "박유진", role: "회장" },
@@ -553,7 +545,15 @@ const matches = [
   { date: "2026-11-15", team1: [{name:"김영민",position:"포핸드"},{name:"송영주",position:"백핸드"}], team2: [{name:"정영란",position:"포핸드"},{name:"엄다예",position:"백핸드"}], score: "6:5", winner: "team1" },
   { date: "2026-11-15", team1: [{name:"박유진",position:"포핸드"},{name:"김소현",position:"백핸드"}], team2: [{name:"이진선",position:"포핸드"},{name:"이민지",position:"백핸드"}], score: "6:4", winner: "team1" },
   { date: "2026-11-15", team1: [{name:"박유진",position:"포핸드"},{name:"송영주",position:"백핸드"}], team2: [{name:"엄다예",position:"포핸드"},{name:"김소현",position:"백핸드"}], score: "1:3", winner: "team2" },
-  { date: "2026-11-15", team1: [{name:"이민지",position:"포핸드"},{name:"김영민",position:"백핸드"}], team2: [{name:"문지원",position:"포핸드"},{name:"이진선",position:"백핸드"}], score: "2:2", winner: "draw" }
+  { date: "2026-11-15", team1: [{name:"이민지",position:"포핸드"},{name:"김영민",position:"백핸드"}], team2: [{name:"문지원",position:"포핸드"},{name:"이진선",position:"백핸드"}], score: "2:2", winner: "draw" },
+  { date: "2026-11-22", team1: [{name:"박유진",position:"포핸드"},{name:"이민지",position:"백핸드"}], team2: [{name:"송영주",position:"포핸드"},{name:"엄다예",position:"백핸드"}], score: "6:3", winner: "team1" },
+  { date: "2026-11-22", team1: [{name:"박유진",position:"포핸드"},{name:"송영주",position:"백핸드"}], team2: [{name:"이재성",position:"포핸드"},{name:"김명희",position:"백핸드"}], score: "5:1", winner: "team1" },
+  { date: "2026-11-22", team1: [{name:"김소현",position:"포핸드"},{name:"문지원",position:"백핸드"}], team2: [{name:"김명희",position:"포핸드"},{name:"김정아",position:"백핸드"}], score: "6:4", winner: "team1" },
+  { date: "2026-11-22", team1: [{name:"이민지",position:"포핸드"},{name:"김소현",position:"백핸드"}], team2: [{name:"문지원",position:"포핸드"},{name:"엄다예",position:"백핸드"}], score: "6:4", winner: "team1" },
+  { date: "2026-11-22", team1: [{name:"박유진",position:"포핸드"},{name:"문지원",position:"백핸드"}], team2: [{name:"송영주",position:"포핸드"},{name:"김명희",position:"백핸드"}], score: "6:0", winner: "team1" },
+  { date: "2026-11-22", team1: [{name:"엄다예",position:"포핸드"},{name:"이민지",position:"백핸드"}], team2: [{name:"김정아",position:"포핸드"},{name:"김소현",position:"백핸드"}], score: "6:3", winner: "team1" },
+  { date: "2026-11-22", team1: [{name:"박유진",position:"포핸드"},{name:"송영주",position:"백핸드"}], team2: [{name:"이민지",position:"포핸드"},{name:"김정아",position:"백핸드"}], score: "3:2", winner: "team1" },
+  { date: "2026-11-22", team1: [{name:"엄다예",position:"포핸드"},{name:"김소현",position:"백핸드"}], team2: [{name:"김명희",position:"포핸드"},{name:"문지원",position:"백핸드"}], score: "3:2", winner: "team1" }
 ];
 
 /* =========================================================
@@ -1397,6 +1397,4 @@ initFilter();
 initTabs();
 render();
 </script>
-</body>
-
-</html>
+</body></html>
