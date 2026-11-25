@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>PUFF SERVE 경기 입력기</title>
+<style>
+  :root {
+    --surface-1: #fcfcfb;
+    --page-plane: #f9f9f7;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --gridline: #e1e0d9;
+    --border: rgba(11,11,11,0.12);
+    --navy: #204f8f;
+    --navy-bright: #2f5aa8;
+    --navy-wash: #eaf1fb;
+    --seq-100: #d8e4f6;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 0;
+    background: var(--page-plane);
+    color: var(--text-primary);
+    font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, -apple-system, sans-serif;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 80px; }
+  header {
+    border-top: 4px solid var(--navy-bright);
+    padding-top: 10px;
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: 20px; font-weight: 800; margin: 0;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h1::before {
+    content: ""; width: 10px; height: 10px; border-radius: 3px;
+    background: var(--navy-bright); display: inline-block;
+  }
+  .sub { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--navy-bright);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-size: 14px; font-weight: 700; margin: 0 0 12px 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  input[type="date"], input[type="text"], input[type="number"] {
+    font-family: inherit; font-size: 14px;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 10px; background: #fff; color: var(--text-primary);
+  }
+  input[type="number"] { width: 64px; text-align: center; font-weight: 700; font-size: 16px; }
+
+  .seg {
+    display: inline-flex; border: 1px solid var(--navy-bright); border-radius: 8px; overflow: hidden;
+  }
+  .seg button {
+    appearance: none; border: none; background: #fff; color: var(--navy);
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    padding: 7px 14px; cursor: pointer;
+  }
+  .seg button.active { background: var(--navy-bright); color: #fff; }
+
+  .slots {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
+  }
+  .team-box {
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: var(--page-plane);
+  }
+  .team-label { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .slot-btn {
+    width: 100%; text-align: left; font-family: inherit; font-size: 13.5px;
+    padding: 9px 10px; border-radius: 8px; border: 1.5px dashed var(--gridline);
+    background: #fff; color: var(--text-muted); cursor: pointer; margin-bottom: 6px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .slot-btn:last-child { margin-bottom: 0; }
+  .slot-btn.active { border-style: solid; border-color: var(--navy-bright); background: var(--navy-wash); }
+  .slot-btn.filled { border-style: solid; border-color: var(--border); color: var(--text-primary); font-weight: 700; }
+  .slot-pos {
+    font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+    background: var(--seq-100); color: var(--navy);
+  }
+
+  .member-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px;
+  }
+  .m-btn {
+    appearance: none; font-family: inherit; font-size: 13.5px; font-weight: 600;
+    padding: 9px 4px; border-radius: 8px; border: 1px solid var(--border);
+    background: #fff; color: var(--text-primary); cursor: pointer;
+  }
+  .m-btn:active { background: var(--navy-wash); }
+  .m-btn.used { background: var(--seq-100); color: var(--navy); border-color: var(--navy-bright); }
+
+  .guest-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .g-chip {
+    display: inline-flex; align-items: center; border-radius: 8px;
+    border: 1px solid var(--navy-bright); background: var(--navy-wash); overflow: hidden;
+  }
+  .g-chip.used { background: var(--seq-100); }
+  .g-btn {
+    appearance: none; border: none; background: transparent; color: var(--navy);
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    padding: 7px 6px 7px 10px; cursor: pointer;
+  }
+  .g-del {
+    appearance: none; border: none; background: transparent; color: var(--text-muted);
+    font-size: 13px; padding: 7px 8px 7px 2px; cursor: pointer;
+  }
+
+  .guest-row { display: flex; gap: 6px; }
+  .guest-row input { flex: 1; min-width: 0; }
+
+  .btn {
+    appearance: none; border: none; border-radius: 8px; font-family: inherit;
+    font-size: 13.5px; font-weight: 700; padding: 9px 14px; cursor: pointer;
+  }
+  .btn-primary { background: var(--navy); color: #fff; }
+  .btn-primary:active { background: var(--navy-bright); }
+  .btn-soft { background: var(--navy-wash); color: var(--navy); border: 1px solid var(--navy-bright); }
+  .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+
+  .score-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .score-presets button {
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    padding: 5px 9px; border-radius: 6px; border: 1px solid var(--border);
+    background: #fff; color: var(--text-secondary); cursor: pointer;
+  }
+
+  .match-list { display: flex; flex-direction: column; gap: 8px; }
+  .match-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--page-plane); font-size: 13.5px; font-weight: 600;
+  }
+  .del-btn {
+    appearance: none; border: none; background: transparent; color: var(--text-muted);
+    font-size: 16px; cursor: pointer; padding: 2px 6px;
+  }
+  textarea {
+    width: 100%; min-height: 110px; font-family: inherit; font-size: 13.5px;
+    line-height: 1.6; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: #fff; resize: vertical;
+  }
+  .status { font-size: 12.5px; color: var(--navy); font-weight: 700; margin-left: 8px; }
+
+  @media (max-width: 480px) {
+    .member-grid { grid-template-columns: repeat(4, 1fr); }
+    .slots { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>PUFF SERVE 경기 입력기</h1>
+    <div class="sub">선택한 경기를 채팅 붙여넣기용 약칭 형식으로 정리합니다.</div>
+  </header>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between;">
+      <div class="row">
+        <label style="font-size:13px;font-weight:700;">날짜</label>
+        <input type="date" id="matchDate">
+      </div>
+      <div class="seg" id="typeSeg">
+        <button type="button" class="active" data-type="doubles">복식</button>
+        <button type="button" data-type="singles">단식</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span>1. 선수 배치 (칸을 누른 뒤 아래에서 선수 선택)</span>
+      <button type="button" class="btn btn-ghost" style="padding:4px 10px;font-size:12px;" onclick="clearSlots()">초기화</button>
+    </div>
+    <div class="slots" id="slotsWrap"></div>
+    <div class="member-grid" id="memberGrid"></div>
+    <div class="guest-list" id="guestList"></div>
+    <div class="guest-row">
+      <input type="text" id="guestName" placeholder="게스트 실명 입력 (예: 임은지)" onkeydown="if(event.key==='Enter'){event.preventDefault();addGuest();}">
+      <button type="button" class="btn btn-soft" onclick="addGuest()">게스트 추가</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span>2. 스코어 입력 (팀 1 : 팀 2)</span>
+      <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:flex;align-items:center;gap:4px;">
+        <input type="checkbox" id="noScoreChk" onchange="toggleNoScore()"> 승패만 기록
+      </label>
+    </div>
+    <div id="scoreBox">
+      <div class="row">
+        <input type="number" id="s1" min="0" max="9" value="6">
+        <span style="font-weight:800;font-size:18px;">:</span>
+        <input type="number" id="s2" min="0" max="9" value="3">
+        <button type="button" class="btn btn-primary" style="margin-left:auto;" onclick="addMatch()">+ 경기 추가</button>
+      </div>
+      <div class="score-presets">
+        <button type="button" onclick="setScore(6,0)">6:0</button>
+        <button type="button" onclick="setScore(6,1)">6:1</button>
+        <button type="button" onclick="setScore(6,2)">6:2</button>
+        <button type="button" onclick="setScore(6,3)">6:3</button>
+        <button type="button" onclick="setScore(6,4)">6:4</button>
+        <button type="button" onclick="setScore(6,5)">6:5</button>
+        <button type="button" onclick="setScore(5,6)">5:6</button>
+        <button type="button" onclick="setScore(4,6)">4:6</button>
+        <button type="button" onclick="setScore(3,6)">3:6</button>
+        <button type="button" onclick="setScore(5,5)">5:5</button>
+      </div>
+    </div>
+    <div id="winnerOnlyBox" style="display:none;">
+      <div class="row" style="justify-content:space-between;">
+        <div class="seg" id="winnerSeg">
+          <button type="button" class="active" data-w="team1">팀 1 승</button>
+          <button type="button" data-w="team2">팀 2 승</button>
+          <button type="button" data-w="draw">무승부</button>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="addMatch()">+ 경기 추가</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span>3. 정리된 경기 (<span id="countLbl">0</span>경기)</span>
+      <button type="button" class="btn btn-ghost" style="padding:4px 10px;font-size:12px;" onclick="clearAllMatches()">전체 비우기</button>
+    </div>
+    <div class="match-list" id="matchList"></div>
+    <div style="margin-top:12px;">
+      <textarea id="outputText" readonly placeholder="경기를 추가하면 Gemini 채팅에 붙여넣을 텍스트가 여기에 생성됩니다."></textarea>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button type="button" class="btn btn-primary" onclick="copyOutput()">전체 복사</button>
+      <span class="status" id="copyStatus"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+const MEMBERS = [
+  "유진","영민","민지","지원","명희","영주","문경","서윤",
+  "영란","은수","진선","다예","소현","채원","경미","지혜"
+];
+const STORAGE_KEY = "puff_serve_input_v1";
+const GUESTS_KEY = "puff_serve_guests_v1";
+
+let matchType = "doubles";
+let activeSlot = 0;
+let slots = [null, null, null, null]; // [t1_f, t1_b, t2_f, t2_b]
+let winnerOnly = "team1";
+let savedMatches = [];
+let savedGuests = [];
+
+function init() {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  document.getElementById("matchDate").value = `${yyyy}-${mm}-${dd}`;
+
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) savedMatches = JSON.parse(raw);
+    const gRaw = localStorage.getItem(GUESTS_KEY);
+    if (gRaw) savedGuests = JSON.parse(gRaw);
+  } catch (e) {}
+
+  document.querySelectorAll("#typeSeg button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#typeSeg button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      matchType = btn.dataset.type;
+      clearSlots();
+    });
+  });
+
+  document.querySelectorAll("#winnerSeg button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#winnerSeg button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      winnerOnly = btn.dataset.w;
+    });
+  });
+
+  document.getElementById("matchDate").addEventListener("change", () => {
+    savedMatches = [];
+    persist();
+    renderMatches();
+  });
+  renderSlots();
+  renderMembers();
+  renderGuests();
+  renderMatches();
+}
+
+function slotMeta() {
+  return matchType === "doubles"
+    ? [
+        { team: 1, label: "팀 1 · 포핸드", pos: "포" },
+        { team: 1, label: "팀 1 · 백핸드", pos: "백" },
+        { team: 2, label: "팀 2 · 포핸드", pos: "포" },
+        { team: 2, label: "팀 2 · 백핸드", pos: "백" }
+      ]
+    : [
+        { team: 1, label: "팀 1 · 선수", pos: "" },
+        { team: 2, label: "팀 2 · 선수", pos: "" }
+      ];
+}
+
+function renderSlots() {
+  const meta = slotMeta();
+  const t1 = meta.map((m, i) => ({ ...m, i })).filter(m => m.team === 1);
+  const t2 = meta.map((m, i) => ({ ...m, i })).filter(m => m.team === 2);
+  const box = (title, items) => `
+    <div class="team-box">
+      <div class="team-label">${title}</div>
+      ${items.map(it => {
+        const val = slots[it.i];
+        const cls = [
+          "slot-btn",
+          activeSlot === it.i ? "active" : "",
+          val ? "filled" : ""
+        ].filter(Boolean).join(" ");
+        return `<button type="button" class="${cls}" onclick="selectSlot(${it.i})">
+          <span>${val || it.label}</span>
+          ${it.pos ? `<span class="slot-pos">${it.pos}</span>` : ""}
+        </button>`;
+      }).join("")}
+    </div>`;
+  document.getElementById("slotsWrap").innerHTML = box("팀 1", t1) + box("팀 2", t2);
+}
+
+function renderMembers() {
+  const used = new Set(slots.filter(Boolean));
+  document.getElementById("memberGrid").innerHTML = MEMBERS.map(n => `
+    <button type="button" class="m-btn ${used.has(n) ? "used" : ""}" onclick="pickPlayer('${n}')">${n}</button>
+  `).join("");
+}
+
+function renderGuests() {
+  const el = document.getElementById("guestList");
+  if (!savedGuests.length) { el.innerHTML = ""; return; }
+  const used = new Set(slots.filter(Boolean));
+  el.innerHTML = savedGuests.map(g => {
+    const safe = g.replace(/'/g, "\\'");
+    return `
+      <div class="g-chip ${used.has(g) ? "used" : ""}">
+        <button type="button" class="g-btn" onclick="pickPlayer('${safe}')">${g}</button>
+        <button type="button" class="g-del" onclick="removeGuest('${safe}')" aria-label="삭제">✕</button>
+      </div>
+    `;
+  }).join("");
+}
+
+function selectSlot(i) {
+  activeSlot = i;
+  renderSlots();
+}
+
+function pickPlayer(name) {
+  const count = matchType === "doubles" ? 4 : 2;
+  slots[activeSlot] = name;
+  let next = (activeSlot + 1) % count;
+  for (let k = 0; k < count; k++) {
+    const idx = (activeSlot + 1 + k) % count;
+    if (!slots[idx]) { next = idx; break; }
+  }
+  activeSlot = next;
+  renderSlots();
+  renderMembers();
+  renderGuests();
+}
+
+function addGuest() {
+  const inp = document.getElementById("guestName");
+  const raw = inp.value.trim();
+  if (!raw) return;
+  const formatted = raw.includes("(게스트)") ? raw : `${raw}(게스트)`;
+  if (!savedGuests.includes(formatted)) {
+    savedGuests.push(formatted);
+    try { localStorage.setItem(GUESTS_KEY, JSON.stringify(savedGuests)); } catch (e) {}
+  }
+  inp.value = "";
+  pickPlayer(formatted);
+}
+
+function removeGuest(name) {
+  savedGuests = savedGuests.filter(g => g !== name);
+  try { localStorage.setItem(GUESTS_KEY, JSON.stringify(savedGuests)); } catch (e) {}
+  renderGuests();
+}
+
+function clearSlots() {
+  slots = [null, null, null, null];
+  activeSlot = 0;
+  renderSlots();
+  renderMembers();
+  renderGuests();
+}
+
+function setScore(a, b) {
+  document.getElementById("s1").value = a;
+  document.getElementById("s2").value = b;
+}
+
+function toggleNoScore() {
+  const chk = document.getElementById("noScoreChk").checked;
+  document.getElementById("scoreBox").style.display = chk ? "none" : "block";
+  document.getElementById("winnerOnlyBox").style.display = chk ? "block" : "none";
+}
+
+function addMatch() {
+  const need = matchType === "doubles" ? 4 : 2;
+  for (let i = 0; i < need; i++) {
+    if (!slots[i]) {
+      alert("모든 선수 칸을 채워주세요.");
+      return;
+    }
+  }
+  const noScore = document.getElementById("noScoreChk").checked;
+  let line = "";
+  if (matchType === "doubles") {
+    if (noScore) {
+      const res = winnerOnly === "team1" ? "앞팀 승" : winnerOnly === "team2" ? "뒤팀 승" : "무승부";
+      line = `${slots[0]} ${slots[1]} vs ${slots[2]} ${slots[3]} (${res})`;
+    } else {
+      const s1 = document.getElementById("s1").value;
+      const s2 = document.getElementById("s2").value;
+      line = `${slots[0]} 포 ${slots[1]} 백 ${s1}:${s2} ${slots[2]} 포 ${slots[3]} 백`;
+    }
+  } else {
+    if (noScore) {
+      const res = winnerOnly === "team1" ? "앞팀 승" : winnerOnly === "team2" ? "뒤팀 승" : "무승부";
+      line = `${slots[0]} vs ${slots[1]} (${res})`;
+    } else {
+      const s1 = document.getElementById("s1").value;
+      const s2 = document.getElementById("s2").value;
+      line = `${slots[0]} vs ${slots[1]} ${s1}:${s2}`;
+    }
+  }
+  savedMatches.push(line);
+  persist();
+  renderMatches();
+  clearSlots();
+}
+
+function removeMatch(idx) {
+  savedMatches.splice(idx, 1);
+  persist();
+  renderMatches();
+}
+
+function clearAllMatches() {
+  if (!savedMatches.length) return;
+  savedMatches = [];
+  persist();
+  renderMatches();
+}
+
+function persist() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedMatches)); } catch (e) {}
+}
+
+function renderMatches() {
+  document.getElementById("countLbl").textContent = savedMatches.length;
+  const listEl = document.getElementById("matchList");
+  if (!savedMatches.length) {
+    listEl.innerHTML = `<div style="font-size:13px;color:var(--text-muted);text-align:center;padding:10px;">아직 추가된 경기가 없습니다.</div>`;
+  } else {
+    listEl.innerHTML = savedMatches.map((m, i) => `
+      <div class="match-item">
+        <span>${i + 1}. ${m}</span>
+        <button type="button" class="del-btn" onclick="removeMatch(${i})" aria-label="삭제">✕</button>
+      </div>
+    `).join("");
+  }
+  renderOutput();
+}
+
+function renderOutput() {
+  const dateVal = document.getElementById("matchDate").value;
+  if (!savedMatches.length) {
+    document.getElementById("outputText").value = "";
+    return;
+  }
+  document.getElementById("outputText").value = `${dateVal}\n` + savedMatches.join("\n");
+}
+
+async function copyOutput() {
+  const txt = document.getElementById("outputText").value;
+  const st = document.getElementById("copyStatus");
+  if (!txt) { st.textContent = "복사할 경기가 없습니다."; return; }
+  try {
+    await navigator.clipboard.writeText(txt);
+    st.textContent = "복사 완료! Gemini 채팅에 붙여넣으세요.";
+  } catch (e) {
+    document.getElementById("outputText").select();
+    document.execCommand("copy");
+    st.textContent = "복사 완료!";
+  }
+  setTimeout(() => { st.textContent = ""; }, 3000);
+}
+
+init();
+</script>
+</body>
+</html>
