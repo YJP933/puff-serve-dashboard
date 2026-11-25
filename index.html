@@ -1,4 +1,10 @@
-<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PUFF SERVE Tennis Dashboard</title><style>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PUFF SERVE Tennis Dashboard</title>
+<style>
   .viz-root {
     color-scheme: light;
     --surface-1:      #fcfcfb;
@@ -146,6 +152,65 @@
   }
   .empty-state .emoji { font-size: 24px; display: block; margin-bottom: 8px; }
 
+
+  .stat-tile .sub { font-size:11.5px; color:var(--text-secondary); margin-top:4px; font-variant-numeric:tabular-nums; }
+  .tab-btn[hidden] { display:none; }
+  #meTabBtn { color:var(--series-navy); }
+  .tab-panel[data-panel="me"][hidden] { display:none !important; }
+
+  /* 내 대시보드 카드 보드 */
+  .me-board { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+  .me-card { border:1px solid var(--border); border-radius:14px; background:var(--surface-1); padding:14px 16px 16px;
+    animation:pt-rise .55s cubic-bezier(.2,.7,.2,1) both; animation-delay:var(--d,0ms); transition:transform .2s ease, box-shadow .2s ease; min-width:0; }
+  .me-card:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(32,79,143,.10); }
+  .me-card.wide { grid-column:1 / -1; }
+  .me-card.hero { background:var(--series-navy-wash); border-color:var(--series-navy-bright); }
+  .me-title { font-size:11.5px; font-weight:700; letter-spacing:.04em; color:var(--text-secondary); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .me-hero-in { display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+  .ring { position:relative; width:104px; height:104px; flex:none; }
+  .ring svg { width:104px; height:104px; transform:rotate(-90deg); }
+  .ring-bg { fill:none; stroke:var(--seq-100); stroke-width:9; }
+  .ring-fg { fill:none; stroke:var(--series-navy-bright); stroke-width:9; stroke-linecap:round; stroke-dasharray:263.9; stroke-dashoffset:var(--off);
+    animation:ring-draw 1.2s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes ring-draw { from { stroke-dashoffset:263.9; } }
+  .ring-c { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.1; }
+  .ring-c b { font-size:24px; color:var(--series-navy); font-variant-numeric:tabular-nums; }
+  .ring-c span { font-size:10.5px; color:var(--text-secondary); margin-top:2px; }
+  .me-hero-main { flex:1; min-width:180px; }
+  .me-name { font-size:20px; font-weight:800; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .me-elo { font-size:40px; font-weight:800; color:var(--series-navy); font-variant-numeric:tabular-nums; line-height:1.1; margin-top:4px; }
+  .me-elo small { font-size:12px; font-weight:700; color:var(--text-secondary); margin-left:6px; letter-spacing:.02em; }
+  .me-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .me-chip { font-size:12px; padding:3px 10px; border-radius:999px; background:#fff; border:1px solid var(--border); color:var(--text-secondary); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .me-chip b { color:var(--text-primary); }
+  .me-line { display:grid; grid-template-columns:minmax(70px,auto) 1fr 42px; align-items:center; gap:10px; padding:5px 0; font-size:13px; }
+  .me-line .nm { font-weight:600; white-space:nowrap; }
+  .me-line .pc { text-align:right; font-weight:700; color:var(--series-navy); font-variant-numeric:tabular-nums; }
+  .me-line .pt-bar { margin:0; height:7px; }
+  .me-sub { font-size:11.5px; color:var(--text-muted); margin-top:2px; font-variant-numeric:tabular-nums; }
+  .me-tiers { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
+  .me-more { margin-top:8px; font-size:12px; }
+  .me-more summary { cursor:pointer; color:var(--series-navy); font-weight:700; }
+  .split { display:flex; height:26px; border-radius:8px; overflow:hidden; background:var(--seq-100); margin-bottom:8px; }
+  .split > div { display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700; white-space:nowrap; overflow:hidden; animation:pt-fill 1s cubic-bezier(.2,.7,.2,1) both; }
+  .split .f { background:var(--series-navy-bright); color:#fff; }
+  .split .b { background:var(--seq-250); color:var(--series-navy); }
+  .pos-two { display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12.5px; }
+  .pos-two .k { color:var(--text-secondary); font-size:11.5px; }
+  .pos-two .v { font-weight:700; font-variant-numeric:tabular-nums; }
+  .recent-row { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
+  .rc { text-align:center; padding:8px 4px; border:1px solid var(--border); border-radius:12px; background:var(--page-plane);
+    animation:rc-pop .5s cubic-bezier(.3,1.5,.5,1) both; animation-delay:var(--d,0ms); }
+  .rc .dot { width:34px; height:34px; border-radius:50%; margin:0 auto 6px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; }
+  .rc.w .dot { background:var(--series-navy-bright); color:#fff; }
+  .rc.l .dot { background:transparent; border:2px solid var(--baseline); color:var(--text-muted); }
+  .rc.d .dot { background:#eceae3; color:var(--text-secondary); }
+  .rc .sc { font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .rc .pn { font-size:11px; color:var(--text-secondary); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rc .dt { font-size:10.5px; color:var(--text-muted); font-variant-numeric:tabular-nums; }
+  @keyframes rc-pop { from { opacity:0; transform:scale(.6) translateY(8px); } to { opacity:1; transform:none; } }
+  @media (max-width:640px) { .me-board { grid-template-columns:1fr; } .recent-row { gap:5px; } .rc .dot { width:28px; height:28px; } }
+  @media (prefers-reduced-motion: reduce) { .me-card, .ring-fg, .split > div, .rc { animation:none !important; } .me-card { transition:none; } }
   .rec-list { display: flex; flex-direction: column; gap: 10px; }
   .rec-item {
     display: flex; align-items: center; justify-content: space-between;
@@ -232,6 +297,97 @@
   }
   .metric-info .metric-info-body b { color: var(--text-primary); }
 
+
+  /* 파트너십 보드 (카드 + 막대 행) */
+  .pt-top { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-bottom:14px; }
+  .pt-card { border:1px solid var(--border); border-radius:12px; padding:14px 16px 14px; background:var(--surface-1);
+    animation:pt-rise .5s ease both; animation-delay:var(--d,0ms); }
+  .pt-card.tier-t100 { border-color:var(--series-navy-bright); background:var(--series-navy-wash); }
+  .pt-card-head { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:24px; }
+  .pt-rank { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%;
+    background:var(--series-navy); color:#fff; font-size:12px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .pt-names { font-size:16px; font-weight:700; margin:10px 0 2px; white-space:nowrap; }
+  .pt-amp { color:var(--text-muted); font-weight:400; margin:0 2px; }
+  .pt-rate { font-size:30px; font-weight:800; color:var(--series-navy); font-variant-numeric:tabular-nums; line-height:1.15; }
+  .pt-bar { height:8px; border-radius:999px; background:var(--seq-100); overflow:hidden; margin:8px 0 10px; }
+  .pt-bar-fill { height:100%; border-radius:999px; background:var(--series-navy-bright);
+    animation:pt-fill .9s cubic-bezier(.2,.7,.2,1) both; animation-delay:var(--d,0ms); }
+  .pt-meta { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12px; color:var(--text-secondary); flex-wrap:wrap; }
+  .pt-dots { display:inline-flex; gap:3px; }
+  .pt-dot { width:8px; height:8px; border-radius:50%; background:var(--series-navy-bright); }
+  .pt-dot.l { background:transparent; border:1.5px solid var(--baseline); }
+  .pt-tag { display:inline-block; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; }
+  .pt-tag.t100 { color:#fff; background:linear-gradient(110deg,#204f8f 30%,#7aa2e0 50%,#204f8f 70%); background-size:220% 100%;
+    animation:pt-shine 2.6s linear infinite; }
+  .pt-tag.t70 { color:var(--series-navy); background:var(--seq-100); }
+  .pt-tag.t60 { color:var(--text-secondary); background:#eceae3; }
+  .pt-list { display:flex; flex-direction:column; min-width:460px; }
+  .pt-row { display:grid; grid-template-columns:26px minmax(150px,1.3fr) minmax(90px,1fr) 44px 62px; align-items:center; gap:12px;
+    padding:9px 4px; border-bottom:1px solid var(--gridline); font-size:13.5px; }
+  .pt-row:last-child { border-bottom:none; }
+  .pt-row .pt-rnk { color:var(--text-muted); font-weight:700; font-variant-numeric:tabular-nums; text-align:center; }
+  .pt-row .pt-rname { font-weight:600; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+  .pt-row .pt-rpct { text-align:right; font-weight:700; color:var(--series-navy); font-variant-numeric:tabular-nums; }
+  .pt-row .pt-rrec { text-align:right; color:var(--text-muted); font-size:12px; white-space:nowrap; }
+  .pt-row .pt-bar { margin:0; }
+  #partnershipTable .pt-row.row-extra { display:none; }
+  #partnershipTable.expanded .pt-row.row-extra { display:grid; }
+  @keyframes pt-fill { from { width:0; } }
+  @keyframes pt-rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+  @keyframes pt-shine { 0% { background-position:-120% 0; } 100% { background-position:220% 0; } }
+  @media (prefers-reduced-motion: reduce) { .pt-card, .pt-bar-fill, .pt-tag.t100 { animation:none !important; } }
+  @media print { .pt-card, .pt-bar-fill, .pt-tag.t100 { animation:none !important; } #partnershipTable .pt-row.row-extra { display:grid !important; } }
+  .static-export .pt-card, .static-export .pt-bar-fill, .static-export .pt-tag.t100 { animation:none !important; }
+  .static-export #partnershipTable .pt-row.row-extra { display:grid !important; }
+
+
+  /* 파트너십 등급 카드 (누르면 명단 펼침) */
+  .pt-tiers { display:flex; flex-direction:column; gap:12px; }
+  .pt-tier { border:1px solid var(--border); border-radius:12px; background:var(--surface-1); overflow:hidden;
+    animation:pt-rise .5s ease both; animation-delay:var(--d,0ms); }
+  .pt-tier.t100 { border-color:var(--series-navy-bright); background:var(--series-navy-wash); }
+  .pt-tier-head { all:unset; box-sizing:border-box; width:100%; display:flex; align-items:center; gap:14px; padding:14px 16px; cursor:pointer; }
+  .pt-tier-head:focus-visible { outline:2px solid var(--series-navy-bright); outline-offset:-2px; }
+  .pt-tier.empty .pt-tier-head { cursor:default; opacity:.55; }
+  .pt-tier-main { flex:1; min-width:0; }
+  .pt-tier-sub { font-size:12px; color:var(--text-secondary); margin-top:6px; line-height:1.5; }
+  .pt-tier-count { font-size:26px; font-weight:800; color:var(--series-navy); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .pt-tier-count small { font-size:12px; font-weight:600; color:var(--text-secondary); margin-left:2px; }
+  .pt-chev { width:10px; height:10px; border-right:2px solid var(--series-navy); border-bottom:2px solid var(--series-navy);
+    transform:rotate(45deg); transition:transform .25s ease; margin:0 4px 4px 2px; flex:none; }
+  .pt-tier.open .pt-chev { transform:rotate(-135deg); margin-bottom:-4px; }
+  .pt-tier.empty .pt-chev { visibility:hidden; }
+  .pt-tier-body { display:none; padding:0 16px 12px; overflow-x:auto; }
+  .pt-tier.open .pt-tier-body { display:block; animation:pt-rise .35s ease both; }
+  .pt-tier-body .pt-row { grid-template-columns:minmax(150px,1.3fr) minmax(90px,1fr) 44px 62px 96px; }
+  .pt-tier-body .pt-dots { justify-content:flex-end; }
+  @media print { .pt-tier-body { display:block !important; } .pt-chev { display:none; } }
+  .static-export .pt-tier-body { display:block !important; }
+  .static-export .pt-chev { display:none; }
+
+
+  /* 조합별 포지션 배치 비교 */
+  .pp-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px; padding:10px 4px; border-bottom:1px solid var(--gridline); min-width:480px; }
+  .pp-row:last-child { border-bottom:none; }
+  .pp-arrs { display:flex; flex-direction:column; gap:6px; }
+  .pp-arr { display:grid; grid-template-columns:minmax(150px,1.1fr) minmax(80px,1fr) 92px; align-items:center; gap:12px; font-size:13px; }
+  .pp-arr .pp-label { white-space:nowrap; color:var(--text-secondary); }
+  .pp-arr.best .pp-label { font-weight:700; color:var(--text-primary); }
+  .pp-arr .pt-bar { margin:0; height:7px; }
+  .pp-arr:not(.best) .pt-bar-fill { background:var(--seq-250); }
+  .pp-arr .pp-val { text-align:right; font-variant-numeric:tabular-nums; color:var(--text-secondary); white-space:nowrap; font-size:12px; }
+  .pp-arr.best .pp-val { color:var(--series-navy); font-weight:700; }
+  .pp-rec { display:inline-block; margin-left:6px; padding:0 6px; border-radius:4px; font-size:10px; font-weight:700; background:var(--series-navy); color:#fff; vertical-align:middle; }
+  .pp-gap { font-weight:800; color:var(--series-navy); font-variant-numeric:tabular-nums; font-size:15px; text-align:right; min-width:64px; }
+  .pp-gap small { display:block; font-size:10px; font-weight:600; color:var(--text-muted); }
+  .pp-note { font-size:12px; color:var(--text-muted); text-align:right; min-width:64px; }
+
+  /* 포지션 분석 보조 표시 */
+  .pos-sub { display:block; font-size:11px; color:var(--text-muted); margin-top:1px; font-variant-numeric:tabular-nums; }
+  .pos-sub.up { color:var(--series-navy); font-weight:700; }
+  .badge.soft { background:var(--seq-100); color:var(--series-navy); }
+  .badge.mute { background:#eceae3; color:var(--text-secondary); }
+
   @media (max-width: 640px) {
     .stat-row { grid-template-columns: repeat(2, 1fr); }
     table { font-size: 12.5px; }
@@ -276,7 +432,10 @@
   .static-export .metric-info summary { display: none; }
   .static-export .metric-info .metric-info-body { display: block !important; }
   .static-export #partnershipTable tr.row-extra { display: table-row !important; }
-</style></head><body>
+</style>
+</head>
+<body>
+<body>
 <div class="viz-root">
   <div class="wrap">
 
@@ -306,12 +465,17 @@
     <div class="filter-note" id="filterNote" style="display:none;"></div>
 
     <div class="tabs" role="tablist">
+      <button class="tab-btn" id="meTabBtn" role="tab" aria-selected="false" data-tab="me" hidden></button>
       <button class="tab-btn active" role="tab" aria-selected="true" data-tab="ranking">개인 랭킹</button>
       <button class="tab-btn" role="tab" aria-selected="false" data-tab="partnership">파트너십 랭킹</button>
       <button class="tab-btn" role="tab" aria-selected="false" data-tab="position">포지션 분석</button>
       <button class="tab-btn" role="tab" aria-selected="false" data-tab="recommend">추천 페어링</button>
       <button class="tab-btn" role="tab" aria-selected="false" data-tab="matches">최근 경기</button>
       <button class="tab-btn" role="tab" aria-selected="false" data-tab="roster">클럽 회원</button>
+    </div>
+
+    <div class="tab-panel" data-panel="me" hidden>
+      <div class="me-board" id="meBoard"></div>
     </div>
 
     <div class="tab-panel active" data-panel="ranking">
@@ -325,7 +489,7 @@
     <div class="tab-panel" data-panel="partnership">
       <div class="card">
         <h2>파트너십(조합) 랭킹</h2>
-        <p class="card-desc">함께 팀을 이룬 조합별 성적입니다. 승률이 높은 순으로 정렬되며, 화면에는 상위 8개만 기본 표시됩니다 ("숨긴 조합 보기"로 전체 확인 가능, PDF/인쇄에는 항상 전체가 포함됩니다). 함께 뛴 경기가 1경기뿐인 조합과 게스트가 포함된 조합은 집계에서 제외합니다.</p>
+        <p class="card-desc">함께 팀을 이룬 조합을 승률 등급(100% 조합·강세 조합·안정 조합)으로 묶었습니다. 등급 카드를 누르면 해당 조합 명단이 펼쳐지며, 점은 최근 최대 10경기의 승(●)·패(○)입니다. 승률 60% 미만 조합은 표시하지 않습니다. 함께 뛴 경기가 1경기뿐인 조합과 게스트가 포함된 조합은 집계에서 제외하며, PDF/인쇄에는 모든 명단이 펼쳐진 상태로 포함됩니다.</p>
         <div id="partnershipTableWrap"></div>
       </div>
     </div>
@@ -333,13 +497,13 @@
     <div class="tab-panel" data-panel="position">
       <div class="card">
         <h2>선수별 포지션 승률</h2>
-        <p class="card-desc">포핸드(듀스 코트) / 백핸드(애드 코트)로 뛰었을 때 각각의 승률입니다. (복식 경기만 집계, 단식·게스트 조합은 제외)</p>
+        <p class="card-desc">포핸드(듀스 코트) / 백핸드(애드 코트)로 뛰었을 때의 성적입니다. <b>주 포지션</b>은 출전 비중이고, <b>승률 우위</b>는 별개로 판정합니다. 승률은 경기 수가 적을수록 50% 쪽으로 보정하며, <b>기대 대비</b>는 그 경기의 파트너·상대 Elo로 계산한 기대 승률보다 얼마나 더 이겼는지(보정 포함)를 뜻합니다. 두 포지션 모두 5경기 이상이고 기대 대비 격차가 10%p 이상일 때만 우위로 표시하며, 그 외에는 "차이 미미" 또는 "표본 부족"입니다. (복식·포지션 기록 경기만 집계, 단식·게스트는 제외)</p>
         <div id="positionPersonalWrap"></div>
       </div>
 
       <div class="card">
         <h2>조합별 최적 포지션 배치</h2>
-        <p class="card-desc">같은 두 사람이라도 포지션을 바꿔 뛰었을 때 승률 차이가 있는지 비교해 추천 배치를 보여줍니다. 함께 뛴 경기가 1경기뿐인 조합은 집계에서 제외합니다.</p>
+        <p class="card-desc">같은 두 사람이 포핸드/백핸드를 바꿔 뛴 성적을 비교합니다. 배치별 승률은 경기 수가 적을수록 50% 쪽으로 보정해 비교하며, 두 배치 모두 3경기 이상이고 격차가 15%p 이상일 때만 "추천"으로 표시합니다. 카드를 누르면 명단이 펼쳐집니다. 함께 뛴 경기가 1경기뿐인 조합은 제외합니다.</p>
         <div id="positionPairWrap"></div>
       </div>
     </div>
@@ -560,7 +724,9 @@ const matches = [
    화면 상태 (필터 / 펼침 / 보기 모드)
    ========================================================= */
 let selectedPlayer = null;   // null = 전체보기, 아니면 특정 회원 이름
-let showAllMatches = false;  // 최근 경기 기록 전체 펼침 여부
+let showAllMatches = false;
+let wrapPrefix = "";         // "me_"이면 "내 대시보드" 탭 안의 컨테이너에 같은 렌더러를 한 번 더 그립니다
+const W = id => document.getElementById(wrapPrefix + id);  // 최근 경기 기록 전체 펼침 여부
 
 /* Claude 아티팩트로 공유된 페이지는 보안상 격리된 프레임(iframe) 안에서 열리는데,
    이 환경에서는 브라우저 인쇄 대화상자(window.print())는 물론 팝업(window.open)과
@@ -743,45 +909,66 @@ function computePartnershipStats() {
       const names = teamNames(team);
       if (!names.every(isMemberName)) return; // 게스트가 포함된 조합은 집계 제외
       const key = pairKey(names[0], names[1]);
-      if (!stats[key]) stats[key] = { key, players: [...names].sort(), games: 0, wins: 0, losses: 0 };
+      if (!stats[key]) stats[key] = { key, players: [...names].sort(), games: 0, wins: 0, losses: 0, results: [] };
       stats[key].games++;
       const won = (idx === 0 && m.winner === "team1") || (idx === 1 && m.winner === "team2");
       if (won) stats[key].wins++; else stats[key].losses++;
+      stats[key].results.push(won ? 1 : 0);
     });
   });
   return Object.values(stats).map(s => ({ ...s, winRate: s.wins / s.games }));
 }
 
-/* 선수별 포핸드/백핸드 승률 (복식에만 해당하는 개념이라 단식 경기는 제외합니다) */
+/* 선수별 포핸드/백핸드 성적 (복식에만 해당하는 개념이라 단식 경기는 제외합니다)
+   단순 승률은 "누구와 뛰었는지"와 "경기 수"에 크게 흔들리므로 두 가지를 보정합니다.
+   ① 보정 승률: 경기 수가 적을수록 50% 쪽으로 당겨 계산합니다 (ADJUST_K 사용).
+   ② 기대 대비: 그 경기 당시의 파트너·상대 Elo로 계산한 기대 승률보다 얼마나 더 이겼는지(승 - 기대승)를
+      (경기 수 + ADJUST_K)로 나눈 값입니다. 강한 파트너와 뛴 포지션이 부풀려지는 효과를 걷어냅니다. */
+const POS_MIN_GAMES = 5;      // 포지션별 최소 경기 수 (둘 다 충족해야 우위 판정)
+const POS_MIN_GAP = 0.10;     // 두 포지션의 '기대 대비' 격차가 이 값 이상일 때만 우위로 판정
 function computePositionStats() {
   const stats = {};
-  members.forEach(m => {
-    stats[m.name] = {
-      name: m.name, role: m.role,
-      forehand: { games: 0, wins: 0 },
-      backhand: { games: 0, wins: 0 }
-    };
-  });
-  matches.forEach(m => {
+  const slotInit = () => ({ games: 0, wins: 0, exp: 0 });
+  members.forEach(m => { stats[m.name] = { name: m.name, role: m.role, forehand: slotInit(), backhand: slotInit() }; });
+  const elo = {};
+  members.forEach(m => { elo[m.name] = ELO_START; });
+  const ratingOf = n => (n in elo) ? elo[n] : ELO_START;
+  const sorted = matches.slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  sorted.forEach(m => {
     if (m.winner === "draw") return; // 무승부는 포지션 승률 계산에서 제외
     if (!isDoubles(m)) return; // 단식은 포지션(포핸드/백핸드) 개념이 없음
-    if ([...m.team1, ...m.team2].some(p => !p.position)) return; // 포지션 미기록 경기는 포지션 집계에서 제외
-    [m.team1, m.team2].forEach((team, idx) => {
-      const won = (idx === 0 && m.winner === "team1") || (idx === 1 && m.winner === "team2");
-      team.forEach(p => {
-        const s = stats[p.name];
-        if (!s) return; // 게스트는 회원 전용 포지션 집계에서 제외
-        const slot = p.position === "백핸드" ? s.backhand : s.forehand;
-        slot.games++;
-        if (won) slot.wins++;
+    const n1 = teamNames(m.team1), n2 = teamNames(m.team2);
+    const r1 = n1.reduce((s, n) => s + ratingOf(n), 0) / n1.length;
+    const r2 = n2.reduce((s, n) => s + ratingOf(n), 0) / n2.length;
+    const e1 = 1 / (1 + Math.pow(10, (r2 - r1) / 400));
+    const hasPos = ![...m.team1, ...m.team2].some(p => !p.position); // 포지션 미기록 경기는 포지션 집계에서 제외
+    if (hasPos) {
+      [m.team1, m.team2].forEach((team, idx) => {
+        const won = (idx === 0 && m.winner === "team1") || (idx === 1 && m.winner === "team2");
+        const e = idx === 0 ? e1 : 1 - e1;
+        team.forEach(p => {
+          const s = stats[p.name];
+          if (!s) return; // 게스트는 회원 전용 포지션 집계에서 제외
+          const slot = p.position === "백핸드" ? s.backhand : s.forehand;
+          slot.games++; slot.exp += e;
+          if (won) slot.wins++;
+        });
       });
-    });
+    }
+    const delta = ELO_K * ((m.winner === "team1" ? 1 : 0) - e1); // Elo는 포지션 기록 유무와 무관하게 동일하게 갱신
+    n1.forEach(n => { if (n in elo) elo[n] += delta; });
+    n2.forEach(n => { if (n in elo) elo[n] -= delta; });
   });
-  return Object.values(stats).map(s => ({
+  const fin = s => ({
     ...s,
-    forehandRate: s.forehand.games > 0 ? s.forehand.wins / s.forehand.games : null,
-    backhandRate: s.backhand.games > 0 ? s.backhand.wins / s.backhand.games : null
-  }));
+    rate: s.games > 0 ? s.wins / s.games : null,
+    adjRate: s.games > 0 ? adjustedRate(s.wins, s.games) : null,
+    edge: s.games > 0 ? (s.wins - s.exp) / (s.games + ADJUST_K) : null
+  });
+  return Object.values(stats).map(s => {
+    const f = fin(s.forehand), bk = fin(s.backhand);
+    return { ...s, forehand: f, backhand: bk, forehandRate: f.rate, backhandRate: bk.rate };
+  });
 }
 
 /* 조합별 포지션 배치(누가 포핸드/백핸드였는지) 승률 비교 — 복식 + 두 사람 모두 회원인 경우만 */
@@ -872,15 +1059,22 @@ function computeRecommendations(personalStats, partnershipStats, pairPositionSta
 const PARTNERSHIP_MIN_GAMES = 2; // 1경기뿐인 조합은 우연성이 커서 목록에서 제외 (표만 간소화, 통계 자체는 그대로 유지)
 const PARTNERSHIP_LIMIT = 8;     // 기본으로는 상위 8개 조합만 보여주고 "더보기"로 전체 확인
 
+const PARTNERSHIP_TIERS = [
+  { id: "t100", label: "100% 조합", desc: "함께 뛴 경기를 한 번도 지지 않은 조합", test: r => r >= 1 },
+  { id: "t70",  label: "강세 조합",  desc: "승률 70% 이상 100% 미만", test: r => r >= 0.7 && r < 1 },
+  { id: "t60",  label: "안정 조합",  desc: "승률 60% 이상 70% 미만", test: r => r >= 0.6 && r < 0.7 }
+];
+
 function renderPartnershipTable(partnershipStats) {
-  const wrap = document.getElementById("partnershipTableWrap");
+  const wrap = W("partnershipTableWrap");
   const qualified = partnershipStats.filter(p => p.games >= PARTNERSHIP_MIN_GAMES);
   const excludedCount = partnershipStats.length - qualified.length;
   let list = qualified;
   if (selectedPlayer) list = list.filter(p => p.players.includes(selectedPlayer));
-  if (list.length === 0) {
-    const excludedNote = (!selectedPlayer && excludedCount > 0)
-      ? `<div style="font-size:12px; color:var(--text-muted); margin-top:10px;">함께 뛴 경기가 1경기뿐인 조합 ${excludedCount}개는 표에서 제외했습니다.</div>` : "";
+  const sorted = list.slice().sort((a, b) => b.winRate - a.winRate || b.games - a.games);
+  const excludedNote = (!selectedPlayer && excludedCount > 0)
+    ? `<div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:10px;">함께 뛴 경기가 1경기뿐인 조합 ${excludedCount}개는 집계에서 제외했습니다.</div>` : "";
+  if (sorted.length === 0) {
     wrap.innerHTML = `
       <div class="empty-state">
         <span class="emoji">🤝</span>
@@ -890,50 +1084,48 @@ function renderPartnershipTable(partnershipStats) {
       </div>${excludedNote}`;
     return;
   }
-  const sorted = list.slice().sort((a, b) => b.winRate - a.winRate || b.games - a.games);
-  // 화면에서는 상위 PARTNERSHIP_LIMIT개만 기본으로 보이지만, 나머지 행도 DOM에는 그대로 넣어두고
-  // CSS로만 숨깁니다 — 그래야 PDF로 저장/인쇄할 때는 "더보기"를 누르지 않았어도 항상 전체가 나옵니다.
-  const rows = sorted.map((p, i) => `
-    <tr class="${i >= PARTNERSHIP_LIMIT ? "row-extra" : ""}">
-      <td>${p.players.join(" & ")}</td>
-      <td class="num">${p.games}</td>
-      <td class="num">${p.wins}</td>
-      <td class="num">${p.losses}</td>
-      <td>
-        <div class="meter-cell">
-          <div class="meter-track"><div class="meter-fill" style="width:${Math.round(p.winRate * 100)}%"></div></div>
-          <span class="meter-pct">${fmtPct(p.winRate)}</span>
+  const dotsOf = p => p.results.slice(-10).map(r => `<span class="pt-dot ${r ? "w" : "l"}"></span>`).join("");
+  const pairName = p => `${p.players[0]}<span class="pt-amp">/</span>${p.players[1]}`;
+  const tiersHtml = PARTNERSHIP_TIERS.map((t, i) => {
+    const items = sorted.filter(p => t.test(p.winRate));
+    const preview = items.slice(0, 2).map(p => `${p.players[0]}/${p.players[1]}`).join(", ");
+    const rows = items.map(p => {
+      const pct = Math.round(p.winRate * 100);
+      return `
+      <div class="pt-row">
+        <span class="pt-rname">${pairName(p)}</span>
+        <div class="pt-bar"><div class="pt-bar-fill" style="width:${pct}%"></div></div>
+        <span class="pt-rpct">${pct}%</span>
+        <span class="pt-rrec">${p.wins}승 ${p.losses}패</span>
+        <span class="pt-dots">${dotsOf(p)}</span>
+      </div>`;
+    }).join("");
+    const empty = items.length === 0;
+    return `
+    <div class="pt-tier ${t.id} ${empty ? "empty" : ""}" style="--d:${i * 120}ms" data-tier="${t.id}">
+      <button type="button" class="pt-tier-head" aria-expanded="false" ${empty ? "disabled" : ""}>
+        <div class="pt-tier-main">
+          <span class="pt-tag ${t.id}">${t.label}</span>
+          <div class="pt-tier-sub">${t.desc}${empty ? " · 해당 조합 없음" : ` · 예: ${preview}${items.length > 2 ? " 외" : ""}`}</div>
         </div>
-      </td>
-    </tr>
-  `).join("");
-  const hiddenCount = Math.max(0, sorted.length - PARTNERSHIP_LIMIT);
-  const toggleHtml = hiddenCount > 0
-    ? `<div style="text-align:center; margin-top:14px;">
-         <button class="toggle-btn" id="togglePartnershipRows">숨긴 조합 보기 (전체 ${sorted.length}개)</button>
-       </div>`
-    : "";
-  const excludedNote = (!selectedPlayer && excludedCount > 0)
-    ? `<div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:10px;">함께 뛴 경기가 1경기뿐인 조합 ${excludedCount}개는 표에서 제외했습니다.</div>` : "";
-  wrap.innerHTML = `
-    <table id="partnershipTable">
-      <thead><tr><th>조합</th><th class="num">경기</th><th class="num">승</th><th class="num">패</th><th>승률</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    ${toggleHtml}
-    ${excludedNote}`;
-  if (hiddenCount > 0) {
-    const btn = document.getElementById("togglePartnershipRows");
+        <div class="pt-tier-count"><span class="count-up" data-target="${items.length}" data-suffix="">${items.length}</span><small>조합</small></div>
+        <span class="pt-chev"></span>
+      </button>
+      <div class="pt-tier-body"><div class="pt-list">${rows}</div></div>
+    </div>`;
+  }).join("");
+  wrap.innerHTML = `<div class="pt-tiers">${tiersHtml}</div>${excludedNote}`;
+  wrap.querySelectorAll(".pt-tier-head").forEach(btn => {
     btn.addEventListener("click", () => {
-      const table = document.getElementById("partnershipTable");
-      const expanded = table.classList.toggle("expanded");
-      btn.textContent = expanded ? "간단히 보기" : `숨긴 조합 보기 (전체 ${sorted.length}개)`;
+      const tier = btn.closest(".pt-tier");
+      const open = tier.classList.toggle("open");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
     });
-  }
+  });
 }
 
 function renderRecommendations(recs, hasAnyData) {
-  const wrap = document.getElementById("recommendationWrap");
+  const wrap = W("recommendationWrap");
   if (!hasAnyData) {
     wrap.innerHTML = `
       <div class="empty-state">
@@ -974,7 +1166,7 @@ function fmtTeam(team) {
 }
 
 function renderRecentMatches() {
-  const wrap = document.getElementById("recentMatchesWrap");
+  const wrap = W("recentMatchesWrap");
   let list = matches.slice().reverse();
   if (selectedPlayer) {
     list = list.filter(m => teamNames(m.team1).includes(selectedPlayer) || teamNames(m.team2).includes(selectedPlayer));
@@ -989,8 +1181,9 @@ function renderRecentMatches() {
       </div>`;
     return;
   }
-  const RECENT_LIMIT = 4;
-  const visible = showAllMatches ? list : list.slice(0, RECENT_LIMIT);
+  const RECENT_LIMIT = wrapPrefix ? 5 : 4;
+  const expandAll = showAllMatches && !wrapPrefix;
+  const visible = expandAll ? list : list.slice(0, RECENT_LIMIT);
   const hiddenCount = list.length - visible.length;
   const rows = visible.map(m => {
     const resultLabel = m.winner === "draw"
@@ -1007,7 +1200,7 @@ function renderRecentMatches() {
       <td>${resultLabel}</td>
     </tr>`;
   }).join("");
-  const toggleHtml = (hiddenCount > 0 || showAllMatches)
+  const toggleHtml = (!wrapPrefix && (hiddenCount > 0 || showAllMatches))
     ? `<div style="text-align:center; margin-top:14px;">
          <button class="toggle-btn" id="toggleMatchesBtn">${showAllMatches ? "최근 4경기만 보기" : `숨긴 기록 보기 (전체 ${list.length}경기)`}</button>
        </div>`
@@ -1018,7 +1211,7 @@ function renderRecentMatches() {
       <tbody>${rows}</tbody>
     </table>
     ${toggleHtml}`;
-  if (hiddenCount > 0 || showAllMatches) {
+  if (!wrapPrefix && (hiddenCount > 0 || showAllMatches)) {
     document.getElementById("toggleMatchesBtn").addEventListener("click", () => {
       showAllMatches = !showAllMatches;
       renderRecentMatches();
@@ -1040,7 +1233,7 @@ function renderFilterNote() {
   const bar = document.querySelector(".filter-bar");
   if (selectedPlayer) {
     note.style.display = "block";
-    note.textContent = `현재 "${selectedPlayer}" 님과 관련된 정보만 표시 중입니다 (모든 탭에 공통 적용됩니다).`;
+    note.textContent = `현재 "${selectedPlayer}" 님과 관련된 정보만 표시 중입니다. 맨 앞 "${selectedPlayer} 대시보드" 탭에서 한 번에 볼 수 있습니다.`;
   } else {
     note.style.display = "none";
   }
@@ -1192,7 +1385,7 @@ function renderRankingTable(personalStats, bucket, emptyMessage, playerEmptyMess
 }
 
 function renderPersonalRanking(personalStats) {
-  const wrap = document.getElementById("personalRankingWrap");
+  const wrap = W("personalRankingWrap");
   const anyDoubles = personalStats.some(p => p.doubles.games > 0);
   const anySingles = personalStats.some(p => p.singles.games > 0);
   if (!anyDoubles && !anySingles) {
@@ -1238,7 +1431,7 @@ function renderPersonalRanking(personalStats) {
 }
 
 function renderPositionPersonal(positionStats) {
-  const wrap = document.getElementById("positionPersonalWrap");
+  const wrap = W("positionPersonalWrap");
   const anyGames = positionStats.some(p => p.forehand.games > 0 || p.backhand.games > 0);
   if (!anyGames) {
     wrap.innerHTML = `
@@ -1250,11 +1443,7 @@ function renderPositionPersonal(positionStats) {
   }
   let sorted = positionStats
     .filter(p => p.forehand.games > 0 || p.backhand.games > 0)
-    .sort((a, b) => {
-      const ra = Math.max(a.forehandRate ?? -1, a.backhandRate ?? -1);
-      const rb = Math.max(b.forehandRate ?? -1, b.backhandRate ?? -1);
-      return rb - ra;
-    });
+    .sort((a, b) => (b.forehand.games + b.backhand.games) - (a.forehand.games + a.backhand.games));
   if (selectedPlayer) {
     sorted = sorted.filter(p => p.name === selectedPlayer);
     if (sorted.length === 0) {
@@ -1266,47 +1455,63 @@ function renderPositionPersonal(positionStats) {
       return;
     }
   }
+  const fmtEdge = e => {
+    if (e === null) return "";
+    const v = Math.round(e * 100);
+    return `<span class="pos-sub ${v >= 3 ? "up" : ""}">기대 대비 ${v > 0 ? "+" : ""}${v}%p</span>`;
+  };
+  const slotCell = s => s.games === 0
+    ? `<td class="num">-</td>`
+    : `<td class="num">${s.games}경기 · ${fmtPct(s.adjRate)}${fmtEdge(s.edge)}</td>`;
   const rows = sorted.map(p => {
-    let preferred = "-";
-    if (p.forehandRate !== null && p.backhandRate !== null) {
-      if (p.forehandRate > p.backhandRate) preferred = "포핸드";
-      else if (p.backhandRate > p.forehandRate) preferred = "백핸드";
-      else preferred = "동일";
-    } else if (p.forehandRate !== null) preferred = "포핸드 (기록 부족)";
-    else if (p.backhandRate !== null) preferred = "백핸드 (기록 부족)";
+    const f = p.forehand, b = p.backhand, total = f.games + b.games;
+    const share = f.games / total;
+    let main, mainClass = "soft";
+    if (share >= 0.6) main = `포핸드 ${Math.round(share * 100)}%`;
+    else if (share <= 0.4) main = `백핸드 ${Math.round((1 - share) * 100)}%`;
+    else { main = "균형"; mainClass = "mute"; }
+    let verdict, vClass = "mute";
+    if (f.games >= POS_MIN_GAMES && b.games >= POS_MIN_GAMES) {
+      const gap = f.edge - b.edge;
+      if (gap >= POS_MIN_GAP) { verdict = "포핸드 우위"; vClass = ""; }
+      else if (gap <= -POS_MIN_GAP) { verdict = "백핸드 우위"; vClass = ""; }
+      else verdict = "차이 미미";
+    } else verdict = "표본 부족";
     return `
     <tr>
       <td>${p.name}${p.role ? ` <span class="badge">${p.role}</span>` : ""}</td>
-      <td class="num">${p.forehand.games}</td>
-      <td class="num">${fmtPct(p.forehandRate)}</td>
-      <td class="num">${p.backhand.games}</td>
-      <td class="num">${fmtPct(p.backhandRate)}</td>
-      <td class="center">${preferred !== "-" ? `<span class="badge">${preferred}</span>` : "-"}</td>
+      <td class="center"><span class="badge ${mainClass}">${main}</span><span class="pos-sub">${total}경기</span></td>
+      ${slotCell(f)}
+      ${slotCell(b)}
+      <td class="center"><span class="badge ${vClass}">${verdict}</span></td>
     </tr>`;
   }).join("");
   wrap.innerHTML = `
     <table>
       <thead>
         <tr>
-          <th>이름</th><th class="num">포핸드 경기</th><th class="num">포핸드 승률</th>
-          <th class="num">백핸드 경기</th><th class="num">백핸드 승률</th><th class="center">선호 포지션</th>
+          <th>이름</th><th class="center">주 포지션(출전 비중)</th><th class="num">포핸드 (보정 승률)</th>
+          <th class="num">백핸드 (보정 승률)</th><th class="center">승률 우위</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
 
-/* 조합별 최적 포지션 배치도 파트너십 랭킹과 동일하게, 두 사람이 (포지션에 상관없이)
-   합쳐서 2경기 미만 함께 뛴 경우는 우연성이 커서 표에서 제외합니다. */
+/* 조합별 최적 포지션 배치: 같은 두 사람이 포핸드/백핸드를 바꿔 뛴 성적을 비교합니다.
+   배치별 승률은 표본 수를 보정한 값(adjustedRate)으로 비교하고, 두 배치 모두 PAIRPOS_MIN_GAMES 경기 이상이며
+   보정 승률 격차가 PAIRPOS_MIN_GAP 이상일 때만 "추천 배치"로 판정합니다. 합쳐서 2경기 미만 함께 뛴 조합은 제외합니다. */
+const PAIRPOS_MIN_GAMES = 3;
+const PAIRPOS_MIN_GAP = 0.15;
 function renderPositionPair(pairPositionStats) {
-  const wrap = document.getElementById("positionPairWrap");
+  const wrap = W("positionPairWrap");
   const totalGames = p => p.arrangements.reduce((sum, a) => sum + a.games, 0);
   const qualified = pairPositionStats.filter(p => totalGames(p) >= PARTNERSHIP_MIN_GAMES);
   const excludedCount = pairPositionStats.length - qualified.length;
   let list = qualified;
   if (selectedPlayer) list = list.filter(p => p.players.includes(selectedPlayer));
   const excludedNote = (!selectedPlayer && excludedCount > 0)
-    ? `<div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:10px;">함께 뛴 경기가 1경기뿐인 조합 ${excludedCount}개는 표에서 제외했습니다.</div>` : "";
+    ? `<div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:10px;">함께 뛴 경기가 1경기뿐인 조합 ${excludedCount}개는 집계에서 제외했습니다.</div>` : "";
   if (list.length === 0) {
     wrap.innerHTML = `
       <div class="empty-state">
@@ -1317,28 +1522,57 @@ function renderPositionPair(pairPositionStats) {
       </div>${excludedNote}`;
     return;
   }
-  const sorted = list.slice().sort((a, b) => b.recommended.winRate - a.recommended.winRate);
-  const rows = sorted.map(p => {
-    const cells = p.arrangements.map((a, idx) => `
-      <div class="arrangement ${idx === 0 && p.hasContrast ? "best" : ""}">
-        <div class="arrangement-label">${a.forehandName}<span class="pos-tag">포</span> · ${a.backhandName}<span class="pos-tag">백</span></div>
-        <div class="arrangement-stat">${a.games}경기 · ${fmtPct(a.winRate)}</div>
-      </div>`).join("");
+  const items = list.map(p => {
+    const arrs = p.arrangements.map(a => ({ ...a, adj: adjustedRate(a.wins, a.games) })).sort((x, y) => y.adj - x.adj || y.games - x.games);
+    const both = arrs.length >= 2 && arrs[0].games >= PAIRPOS_MIN_GAMES && arrs[1].games >= PAIRPOS_MIN_GAMES;
+    const gap = arrs.length >= 2 ? arrs[0].adj - arrs[1].adj : 0;
+    const cat = both ? (gap >= PAIRPOS_MIN_GAP ? "clear" : "close") : "short";
+    return { players: p.players, arrs, gap, cat, total: totalGames(p) };
+  });
+  const PP_TIERS = [
+    { id: "t100", cat: "clear", label: "배치 차이 뚜렷", desc: "두 배치 모두 3경기 이상, 보정 승률 격차 15%p 이상", open: true },
+    { id: "t70",  cat: "close", label: "차이 미미", desc: "두 배치 모두 3경기 이상이지만 격차 15%p 미만" },
+    { id: "t60",  cat: "short", label: "비교 부족", desc: "한 배치만 뛰었거나 배치별 3경기 미만" }
+  ];
+  const lineOf = (a, best, rec) => {
+    const pct = Math.round(a.winRate * 100);
     return `
-    <tr>
-      <td>${p.players.join(" & ")}</td>
-      <td>${cells}</td>
-      <td class="center">${p.hasContrast
-        ? `<span class="badge">${p.recommended.forehandName} 포 / ${p.recommended.backhandName} 백</span>`
-        : `<span class="badge" style="background:var(--text-muted)">배치 비교 부족</span>`}</td>
-    </tr>`;
+      <div class="pp-arr ${best ? "best" : ""}">
+        <div class="pp-label">${a.forehandName}<span class="pos-tag">포</span> · ${a.backhandName}<span class="pos-tag">백</span>${best && rec ? '<span class="pp-rec">추천</span>' : ""}</div>
+        <div class="pt-bar"><div class="pt-bar-fill" style="width:${pct}%"></div></div>
+        <div class="pp-val">${pct}% · ${a.games}경기</div>
+      </div>`;
+  };
+  const tiersHtml = PP_TIERS.map((t, i) => {
+    let group = items.filter(x => x.cat === t.cat);
+    group = t.cat === "clear" ? group.sort((x, y) => y.gap - x.gap) : group.sort((x, y) => y.total - x.total);
+    const rows = group.map(x => `
+      <div class="pp-row">
+        <div class="pp-arrs">${x.arrs.map((a, k) => lineOf(a, k === 0 && x.arrs.length > 1, t.cat === "clear")).join("")}</div>
+        ${t.cat === "clear" ? `<div class="pp-gap">+${Math.round(x.gap * 100)}%p<small>보정 격차</small></div>` : `<div class="pp-note">${x.arrs.length < 2 ? "한 배치만" : ""}</div>`}
+      </div>`).join("");
+    const empty = group.length === 0;
+    return `
+    <div class="pt-tier ${t.id} ${empty ? "empty" : (t.open ? "open" : "")}" style="--d:${i * 120}ms">
+      <button type="button" class="pt-tier-head" aria-expanded="${!empty && t.open ? "true" : "false"}" ${empty ? "disabled" : ""}>
+        <div class="pt-tier-main">
+          <span class="pt-tag ${t.id}">${t.label}</span>
+          <div class="pt-tier-sub">${t.desc}${empty ? " · 해당 조합 없음" : ""}</div>
+        </div>
+        <div class="pt-tier-count">${group.length}<small>조합</small></div>
+        <span class="pt-chev"></span>
+      </button>
+      <div class="pt-tier-body"><div>${rows}</div></div>
+    </div>`;
   }).join("");
-  wrap.innerHTML = `
-    <table>
-      <thead><tr><th>조합</th><th>배치별 성적</th><th class="center">추천 배치</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    ${excludedNote}`;
+  wrap.innerHTML = `<div class="pt-tiers">${tiersHtml}</div>${excludedNote}`;
+  wrap.querySelectorAll(".pt-tier-head").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tier = btn.closest(".pt-tier");
+      const open = tier.classList.toggle("open");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  });
 }
 
 function renderRoster() {
@@ -1348,6 +1582,117 @@ function renderRoster() {
       <div class="role">${m.role || "회원"}</div>
     </div>
   `).join("");
+}
+
+function renderMeBoard(personalStats, positionStats, partnershipStats, pairPositionStats, recs) {
+  const el = document.getElementById("meBoard");
+  if (!selectedPlayer) { el.innerHTML = ""; return; }
+  const name = selectedPlayer;
+  const me = personalStats.find(p => p.name === name);
+  if (!me) { el.innerHTML = ""; return; }
+  const member = members.find(m => m.name === name);
+  const d = me.doubles, s = me.singles;
+  const ranked = personalStats.filter(p => p.doubles.games >= MIN_RANKING_GAMES_DOUBLES).sort((a, b) => b.doubles.elo - a.doubles.elo);
+  const idx = ranked.findIndex(p => p.name === name);
+  const rankText = idx >= 0 ? `복식 ${idx + 1}위 / ${ranked.length}명` : `순위 집계 전 (${d.games}/${MIN_RANKING_GAMES_DOUBLES}경기)`;
+  const wr = d.winRate === null ? 0 : d.winRate;
+  const off = (263.9 * (1 - wr)).toFixed(1);
+  const gameRate = d.gameRate === null ? "-" : fmtPct(d.gameRate);
+  const singlesChip = s.games > 0 ? `<span class="me-chip">단식 <b>${s.wins}승 ${s.losses}패</b> · Elo ${Math.round(s.elo)}</span>` : "";
+
+  // 파트너
+  const partners = partnershipStats.filter(p => p.players.includes(name) && p.games >= PARTNERSHIP_MIN_GAMES)
+    .sort((x, y) => adjustedRate(y.wins, y.games) - adjustedRate(x.wins, x.games) || y.games - x.games);
+  const partnerOf = p => p.players.find(n => n !== name);
+  const tierCount = id => partners.filter(p => PARTNERSHIP_TIERS.find(t => t.id === id).test(p.winRate)).length;
+  const pLine = (p, i) => {
+    const pct = Math.round(p.winRate * 100);
+    return `<div class="me-line"><span class="nm">${partnerOf(p)}</span><div class="pt-bar"><div class="pt-bar-fill" style="width:${pct}%; --d:${i * 80}ms"></div></div><span class="pc">${pct}%</span></div>
+            <div class="me-sub" style="margin:-3px 0 4px;">${p.wins}승 ${p.losses}패 · ${p.games}경기</div>`;
+  };
+  const partnerHtml = partners.length === 0
+    ? `<div class="me-sub">2경기 이상 함께 뛴 조합이 아직 없습니다.</div>`
+    : `<div class="me-tiers">${PARTNERSHIP_TIERS.map(t => `<span class="pt-tag ${t.id}">${t.label} ${tierCount(t.id)}</span>`).join("")}</div>
+       ${partners.slice(0, 3).map(pLine).join("")}
+       ${partners.length > 3 ? `<details class="me-more"><summary>전체 ${partners.length}조합 보기</summary>${partners.slice(3).map((p, i) => pLine(p, i)).join("")}</details>` : ""}`;
+
+  // 포지션
+  const pos = positionStats.find(p => p.name === name);
+  const f = pos ? pos.forehand : { games: 0 }, b = pos ? pos.backhand : { games: 0 };
+  let posHtml = `<div class="me-sub">포지션이 기록된 경기가 없습니다.</div>`;
+  if (f.games + b.games > 0) {
+    const tot = f.games + b.games, fp = Math.round(f.games / tot * 100);
+    let verdict = "표본 부족";
+    if (f.games >= POS_MIN_GAMES && b.games >= POS_MIN_GAMES) {
+      const gap = f.edge - b.edge;
+      verdict = gap >= POS_MIN_GAP ? "포핸드 우위" : gap <= -POS_MIN_GAP ? "백핸드 우위" : "차이 미미";
+    }
+    const side = (label, x) => x.games === 0 ? `<div><div class="k">${label}</div><div class="v">-</div></div>`
+      : `<div><div class="k">${label} ${x.games}경기</div><div class="v">${fmtPct(x.adjRate)} <span style="font-weight:600;color:var(--text-muted);font-size:11px;">기대 ${x.edge >= 0 ? "+" : ""}${Math.round(x.edge * 100)}%p</span></div></div>`;
+    // 이 선수가 포함된 조합 중 배치 차이가 뚜렷한 곳
+    const clear = pairPositionStats.filter(p => p.players.includes(name)).map(p => {
+      const arrs = p.arrangements.map(a => ({ ...a, adj: adjustedRate(a.wins, a.games) })).sort((x, y) => y.adj - x.adj);
+      if (arrs.length < 2 || arrs[0].games < PAIRPOS_MIN_GAMES || arrs[1].games < PAIRPOS_MIN_GAMES) return null;
+      const gap = arrs[0].adj - arrs[1].adj;
+      return gap >= PAIRPOS_MIN_GAP ? { a: arrs[0], gap } : null;
+    }).filter(Boolean).sort((x, y) => y.gap - x.gap).slice(0, 2);
+    posHtml = `
+      <div class="split"><div class="f" style="width:${Math.max(fp, 14)}%">포 ${fp}%</div><div class="b" style="width:${Math.max(100 - fp, 14)}%">백 ${100 - fp}%</div></div>
+      <div class="pos-two">${side("포핸드", f)}${side("백핸드", b)}</div>
+      <div style="margin-top:8px;"><span class="badge ${verdict === "포핸드 우위" || verdict === "백핸드 우위" ? "" : "mute"}">${verdict}</span></div>
+      ${clear.map(c => `<div class="me-sub" style="margin-top:6px;">추천 배치 · ${c.a.forehandName}<span class="pos-tag">포</span> ${c.a.backhandName}<span class="pos-tag">백</span> (+${Math.round(c.gap * 100)}%p)</div>`).join("")}`;
+  }
+
+  // 추천
+  const myRecs = recs.filter(r => r.a === name || r.b === name).slice(0, 3);
+  const recHtml = myRecs.length === 0 ? `<div class="me-sub">추천 조합이 없습니다.</div>`
+    : myRecs.map((r, i) => {
+        const pct = Math.round(r.score * 100);
+        return `<div class="me-line"><span class="nm">${r.a === name ? r.b : r.a}${i === 0 ? ' <span class="best-tag">BEST</span>' : ""}</span><div class="pt-bar"><div class="pt-bar-fill" style="width:${pct}%; --d:${i * 80}ms"></div></div><span class="pc">${pct}%</span></div>
+                <div class="me-sub" style="margin:-3px 0 4px;">${r.basis}</div>`;
+      }).join("");
+
+  // 최근 5경기
+  const mine = matches.slice().reverse().filter(m => teamNames(m.team1).includes(name) || teamNames(m.team2).includes(name)).slice(0, 5);
+  const rcTiles = mine.map((m, i) => {
+    const myTeam = teamNames(m.team1).includes(name) ? "team1" : "team2";
+    const res = m.winner === "draw" ? "d" : (m.winner === myTeam ? "w" : "l");
+    const mates = teamNames(m[myTeam]).filter(n => n !== name);
+    const opp = teamNames(myTeam === "team1" ? m.team2 : m.team1);
+    const label = mates.length ? `w.${mates[0]}` : "단식";
+    const score = m.score ? (myTeam === "team1" ? m.score : m.score.split(":").reverse().join(":")) : "기록 없음";
+    return `<div class="rc ${res}" style="--d:${i * 90}ms" title="${m.date} · vs ${opp.join(" & ")}">
+      <div class="dot">${res === "w" ? "승" : res === "l" ? "패" : "무"}</div>
+      <div class="sc">${score}</div><div class="pn">${label}</div><div class="dt">${m.date.slice(5).replace("-", "/")}</div></div>`;
+  }).join("");
+  const mw = mine.filter(m => m.winner !== "draw" && m.winner === (teamNames(m.team1).includes(name) ? "team1" : "team2")).length;
+  const ml = mine.filter(m => m.winner !== "draw").length - mw;
+
+  el.innerHTML = `
+    <div class="me-card hero wide" style="--d:0ms">
+      <div class="me-hero-in">
+        <div class="ring"><svg viewBox="0 0 104 104"><circle class="ring-bg" cx="52" cy="52" r="42"/><circle class="ring-fg" cx="52" cy="52" r="42" style="--off:${off}"/></svg>
+          <div class="ring-c"><b>${fmtPct(d.winRate)}</b><span>복식 승률</span></div></div>
+        <div class="me-hero-main">
+          <div class="me-name">${name}${member && member.role ? ` <span class="badge">${member.role}</span>` : ""}</div>
+          <div class="me-elo"><span class="me-count" data-target="${Math.round(d.elo)}">${Math.round(d.elo)}</span><small>Elo</small></div>
+          <div class="me-sub" style="font-size:12.5px; margin-top:0;">${rankText}</div>
+          <div class="me-chips">
+            <span class="me-chip">전적 <b>${d.wins}승 ${d.losses}패</b></span>
+            <span class="me-chip">보정 승률 <b>${fmtPct(d.adjustedRate)}</b></span>
+            <span class="me-chip">게임 득실률 <b>${gameRate}</b></span>
+            ${singlesChip}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="me-card" style="--d:100ms"><div class="me-title">파트너십</div>${partnerHtml}</div>
+    <div class="me-card" style="--d:200ms"><div class="me-title">포지션</div>${posHtml}</div>
+    <div class="me-card" style="--d:300ms"><div class="me-title">추천 페어링</div>${recHtml}</div>
+    <div class="me-card" style="--d:400ms"><div class="me-title"><span>최근 ${mine.length}경기</span><span style="font-weight:600;">${mw}승 ${ml}패</span></div>${rcTiles || '<div class="me-sub">경기 기록이 없습니다.</div>'}</div>`;
+  // 최근 경기 타일은 카드 안에서 5열 그리드로
+  const lastCard = el.lastElementChild;
+  if (rcTiles) { const row = document.createElement("div"); row.className = "recent-row"; Array.from(lastCard.querySelectorAll(".rc")).forEach(n => row.appendChild(n)); lastCard.appendChild(row); }
 }
 
 function render() {
@@ -1368,6 +1713,59 @@ function render() {
   renderRecommendations(recs, hasAnyData);
   renderRecentMatches();
   renderRoster();
+
+  // 회원을 선택하면 "내 대시보드" 탭의 요약 타일이 대신하므로 상단 공통 요약은 숨깁니다.
+  document.getElementById("statRow").style.display = selectedPlayer ? "none" : "";
+  // "내 대시보드" 탭: 특정 회원을 선택했을 때만 나타나는 카드 보드
+  const meBtn = document.getElementById("meTabBtn");
+  const mePanel = document.querySelector('.tab-panel[data-panel="me"]');
+  if (selectedPlayer) {
+    renderMeBoard(personalStats, positionStats, partnershipStats, pairPositionStats, recs);
+    meBtn.textContent = `${selectedPlayer} 대시보드`;
+    meBtn.hidden = false; mePanel.hidden = false;
+  } else {
+    meBtn.hidden = true; mePanel.hidden = true;
+    document.getElementById("meBoard").innerHTML = "";
+  }
+}
+
+/* 승률 숫자가 0에서 올라가는 효과. 막대는 CSS 애니메이션이 처리합니다.
+   HTML에는 이미 최종 값이 들어 있고, 화면에서 파트너십 탭이 보일 때만 잠깐 0부터 다시 올립니다
+   (PDF/저장 파일/모션 최소화 설정에서는 최종 값 그대로). */
+function animateCountUps() {
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  requestAnimationFrame(() => {
+    const panel = document.querySelector('.tab-panel[data-panel="partnership"]');
+    if (!panel || !panel.classList.contains("active")) return;
+    panel.querySelectorAll(".count-up").forEach(el => {
+      const target = parseInt(el.dataset.target, 10), t0 = performance.now(), dur = 800;
+      const step = now => {
+        const k = Math.min(1, (now - t0) / dur);
+        el.textContent = Math.round(target * (1 - Math.pow(1 - k, 3))) + (el.dataset.suffix ?? "%");
+        if (k < 1) requestAnimationFrame(step); else el.textContent = target + (el.dataset.suffix ?? "%");
+      };
+      el.textContent = "0" + (el.dataset.suffix ?? "%");
+      requestAnimationFrame(step);
+    });
+  });
+}
+
+function animateMeBoard() {
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  requestAnimationFrame(() => {
+    const panel = document.querySelector('.tab-panel[data-panel="me"]');
+    if (!panel || !panel.classList.contains("active")) return;
+    panel.querySelectorAll(".me-count").forEach(el => {
+      const target = parseInt(el.dataset.target, 10), t0 = performance.now(), dur = 1100;
+      const step = now => {
+        const k = Math.min(1, (now - t0) / dur);
+        el.textContent = Math.round(target * (1 - Math.pow(1 - k, 3)));
+        if (k < 1) requestAnimationFrame(step); else el.textContent = target;
+      };
+      el.textContent = "0";
+      requestAnimationFrame(step);
+    });
+  });
 }
 
 function initTabs() {
@@ -1380,6 +1778,8 @@ function initTabs() {
       btn.classList.add("active");
       btn.setAttribute("aria-selected", "true");
       document.querySelector(`.tab-panel[data-panel="${btn.dataset.tab}"]`).classList.add("active");
+      if (btn.dataset.tab === "partnership") animateCountUps();
+      if (btn.dataset.tab === "me") animateMeBoard();
     });
   });
 }
@@ -1390,6 +1790,9 @@ function initFilter() {
   sel.addEventListener("change", () => {
     selectedPlayer = sel.value || null;
     render();
+    const activeBtn = document.querySelector(".tab-btn.active");
+    if (selectedPlayer) document.getElementById("meTabBtn").click();
+    else if (activeBtn && activeBtn.dataset.tab === "me") document.querySelector('.tab-btn[data-tab="ranking"]').click();
   });
 }
 
@@ -1397,4 +1800,6 @@ initFilter();
 initTabs();
 render();
 </script>
-</body></html>
+
+</body>
+</html>
